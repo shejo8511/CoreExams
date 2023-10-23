@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load static %}
+{% if message %}
+    <div id="alert-message" class="alert alert-warning" role="alert">
+        {{ message }}
+    </div>
+{% endif %}
+<div class="card mx-auto" style="width: 35rem;">
+    <div class="card-body ">
+        <div class="text-center"> <!-- Agregar una clase de centrado -->
+            <h4>Datos Paciente</h4>
+            <div class="container">
+                <form method="POST" action="{% url 'examsSelect' %}">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">                
+                            <input id="identification" name="identification" value="{{ identification }}" type="text" class="form-control" disabled>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <input id="birthday" name="birthday" value="{{ birthday }}" type="date" class="form-control" disabled>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <input id="full_name" name="full_name" value="{{ full_name }}" type="text" class="form-control" disabled>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <input id="typeExam" name="typeExam" value="{{ typeExam }}" type="text" class="form-control" disabled>
+                        </div>
+                    </div>
+                    <input id="idExam" name="idExam" value="{{ idExam }}" type="hidden" class="form-control" >
+                    <div class="mb-3 d-grid text-center ">
+                        <!--<button type="submit" class="btn btn-secondary btn-lg text-uppercase fw-bold" >Cancelar</button>-->
+                        <button type="submit" class="btn btn-secondary btn-lg text-uppercase fw-bold" href="{% url 'cancel' %}">Cancelar</button>
+                        <button type="submit" class="btn btn-primary btn-lg text-uppercase fw-bold" >Reporte</button>
+                    </div>
+                </form>
+            </div>
+            <div class="text-center">
+                <div><h4>VideoStream | <label id="estado"></label></h4></div>
+                <div id="capture" >
+                    <img id="resImg" src="{% static '/images/colornegro.jpg' %}" style="width: 450px; height: 300px;"/>
+                    <!--<script src="http://apps.bdimg.com/libs/jquery/2.1.1/jquery.min.js"></script>-->
+                    <script src="{% static 'js/libs/jquery/2.1.1/jquery.min.js' %}"></script>
+                    <script>
+                        const ws = new WebSocket(
+                            'ws://'
+                            + window.location.host
+                            + '/ws/exam/stream/videoStream/'
+                            + 'wms'
+                            + '/'
+                        );
+                        console.log(ws);
+                        ws.onmessage = function(evt) {
+                            v_data = JSON.parse(evt.data);
+                            $("#resImg").attr("src", v_data.message);
+                            console.log("Transmitiendo");
+                        };
+                        ws.onclose = function(evt){
+                            $("#resImg").attr("src", "images/colornegro.jpg");
+                            $("#estado").text("Transmisión interrumpida");
+                            console.log("Connection close.");
+                        };
+                        if (ws.onopen){
+                            $("#estado").text("Trasmitiendo");
+                        }
+                        if (!ws.onopen){
+                            $("#estado").text("Esperando Video");
+                        }
+                    </script>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div>
+<script>
+    // Obtener la referencia al elemento que deseas capturar
+    var element = document.getElementById("capture");
+    var identification = document.getElementById('identification').value;
+    var full_name = document.getElementById('full_name').value;
+    var typeExam = document.getElementById('typeExam').value;
+    var idExam = document.getElementById('idExam').value;
+    // Capturar pantalla al presionar la tecla "c"
+    document.addEventListener('keydown', function(event) {
+        //console.log("addEventListener");
+        //var element = document.body;
+        if (event.key === 'c') {
+            console.log("dentro del if c");
+            html2canvas(element, {
+            onrendered (canvas) { 
+                var formData = new FormData();
+                formData.append('identification', identification);
+                formData.append('full_name', full_name);
+                formData.append('typeExam', typeExam);
+                formData.append('idExam',idExam);
+                formData.append('capture', canvas.toDataURL('image/png'));
+                // Envía la captura de pantalla a Django mediante AJAX
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '/exam/guardar-captura/');
+                xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}');  // Ajusta esto para tu plantilla
+                //console.log("fromData: " + formData);
+                xhr.send(formData);
+            }})
+        }
+    });
+</script>
+{% endblock %}

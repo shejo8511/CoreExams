@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<style>
+    .flex-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+.input-width-1 {
+    width: 150px;
+    margin-right: 15px;
+}
+
+.input-width-2 {
+    width: 150px;
+    margin-right: 15px;
+}
+
+.input-width-3 {
+    width: 360px;
+    margin-right: 15px;
+}
+
+.input-width-4 {
+    width: 250px;
+    margin-right: 15px;
+}
+
+.container-fluid.row {
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container-fluid.row {
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+</style>
+{% if message %}
+    <div id="alert-message" class="alert alert-warning" role="alert">
+        {{ message }}
+    </div>
+{% endif %}
+<div class="card mx-auto" style="width: 65rem;">
+    <div class="card-body ">
+        <div class="text-center"> <!-- Agregar una clase de centrado -->
+            <h4>Datos Paciente</h4>
+            <div class="container">
+                <table>
+                    <tr>
+                        <th>Identificación:</th>
+                        <th>Nacimiento:</th>
+                        <th>Nombre completo:</th>
+                        <th>Tipo de examen:</th>
+                    </tr>
+                    <tr>
+                        <td><input name="identification" value="{{ identification }}" type="text" class="form-control input-width-1" disabled></td>
+                        <td><input name="birthday" value="{{ birthday }}" type="date" class="form-control input-width-2" disabled></td>
+                        <td><input name="full_name" value="{{ full_name }}" type="text" class="form-control input-width-3" disabled></td>
+                        <td><input name="typeExam" value="{{ typeExam }}" type="text" class="form-control input-width-4" disabled></td>
+                    </tr>
+                </table>
+                <input id="idExam" name="idExam" value="{{ idExam }}" type="hidden" class="form-control" >
+            </div>
+        </div>
+        <div class="container-fluid row">
+            <div class="col-12 align-self-start">
+                <div class="text-center">
+                    <h4>Images Capturadas</h4>
+                </div>
+            </div>
+            <div id="detalleseleccion" name="detalleseleccion" style="overflow-x: hidden; overflow-y: scroll; width: 150%; border: 1px solid">
+                
+                {% for objeto in listSamplesExam %}
+                    
+                    <div class="col-md-4">
+                        <img src="{% static objeto.sample_url %}" alt="{{ objeto.name }}" style="width: 150px; height: 100px;">
+                        <input type="checkbox" id="select" value="{{ objeto.select }}" />
+                        <input type="text" id="diagnostic" value="{{ objeto.diagnostic }}" />
+                    </div>  
+                    
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

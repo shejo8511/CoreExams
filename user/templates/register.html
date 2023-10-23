@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  {% if message %}
+    <div id="alert-message" class="alert alert-warning" role="alert">
+        {{ message }}
+    </div>
+  {% endif %}
+  <div class="container">
+    <div class="row">
+      <!--<div class="col-sm-9 col-md-7 col-lg-12 mx-auto">-->
+        <div class="card border-2 shadow rounded-3 my-5">
+          <div class="card-body p-4 p-sm-5">
+            <form method="POST" enctype="multipart/form-data">
+              <div class="form-row">
+                {% csrf_token %}
+                <div class="form-group col-md-6">
+                  <label for="inputLogo">Logo</label>
+                  {{ company_form.logo }}
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="inputUsername">Username</label>
+                  {{user_form.username}}
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="inputPassword">Contraseña</label>
+                  {{user_form.password1}}
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="inputPassword2">Confirmar Contraseña</label>
+                  {{user_form.password2}}
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="inputEmail">Correo Electronico</label>
+                  {{user_form.email}}
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="inputType" >Tipo Membresia</label>
+                  <select name="membership" id="id_membership" class="form-control">
+                    <option value="" disabled selected>Selecciona Tipo Membresia</option>
+                      {% for membership in memberships_list %}
+                          <option value="{{ membership.id }}">{{ membership.name }}</option>
+                      {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-row"> 
+                <div class="form-group col-md-6">
+                  <label for="inputCompanyName">Razon Social</label>
+                  {{company_form.company_name}}
+                </div>
+                <div class="form-group col-md-2">
+                  <label for="inputType">Tipo</label>
+                  {{company_form.identification_type}}
+                </div>
+                <div class="form-group col-md-4">
+                  <label for="inputIdentication">Identificatión</label>
+                  {{company_form.identification}}
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label for="inputPname">Nombres</label>
+                  {{company_form.name}}
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="inputPname">Apellidos</label>
+                  {{company_form.last_name}}
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group col-md-8">
+                  <label for="inputAddress">Direccion</label>
+                  {{company_form.address}}
+                </div>
+                <div class="form-group col-md-4" >
+                  <label for="inputAddress2">Telefono/Celular</label>
+                  {{company_form.phone}}
+                </div>
+              </div>
+              
+              <button type="submit" class="btn btn-primary">REGISTRAR</button>
+            </form>
+          </div>
+        </div>
+      <!--</div>-->
+    </div>
+  </div>
+{% endblock %}

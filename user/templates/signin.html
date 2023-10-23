@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container">
+    <div class="row">
+      <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
+        <div class="card border-0 shadow rounded-3 my-5">
+          <div class="card-body p-4 p-sm-5">
+            <h5 class="card-title text-center mb-5 fw-light fs-5">INICIAR SESIÓN</h5>
+            
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-floating mb-3 text-center">
+                    <div class="form-floating mb-3">
+                        {{ form.username }}
+                        {{ form.username.message }}
+                    </div>
+                    <div class="form-floating mb-3">
+                        {{ form.password }}
+                        {{ form.password.message }}
+                    </div>
+                </div>
+                <div class="d-grid text-center">
+                    <button class="btn btn-success btn-login text-uppercase fw-bold" type="submit">INICIAR SESIÓN</button>
+                </div>
+            </form> 
+          </div>
+            {% if message %}
+                <div id="alert-message" class="alert alert-danger">
+                    {{ message }}
+                </div>
+            {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+    <script>
+        function showAlert(message) {
+            var alertMessage = document.getElementById("alert-message");
+            alertMessage.innerHTML = message;
+            alertMessage.classList.add("alert-active");
+            setTimeout(function() {
+                alertMessage.classList.remove("alert-active");
+            }, 3000);
+        }
+    </script>
+{% endblock %}

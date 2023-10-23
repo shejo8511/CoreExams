@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% if message %}
+    <div id="alert-message" class="alert alert-warning" role="alert">
+        {{ message }}
+    </div>
+{% endif %}
+<h3 class="text-center">Listado de Pacientes | Empresa: {{company.company_name}}</h3>
+<div class="container">
+    <div class="row">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th scope="col">Identificacion</th>
+                <th scope="col">Nombre Completo</th>
+                <th scope="col">Edad</th>
+                <th scope="col">Fecha Examen</th>
+                <th scope="col">Examen</th>
+            </tr>
+            </thead>
+            <tbody>
+                {% for objeto in listPatientExam %}
+                <tr>
+                    <td id="identification">{{ objeto.patient.identification }}</td>
+                    <td>{{ objeto.patient.full_name }}</td>
+                    <td>{{ objeto.patient.age }}</td>
+                    <td id="date_exam">{{ objeto.date_exam }}</td>
+                    {% if objeto.exam_url %}
+                        <td><a href="{% url 'abrir_pdf' objeto.id %}" target="_blank">Abrir PDF</a></td>
+                    {% else %}
+                        <td></td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="row">
+        <div class="col">
+            {% if page.has_previous %}
+                <a href="?page={{ page.previous_page_number }}">Anterior</a>
+            {% endif %}
+        </div>
+        <div class="col text-center">
+            Página {{ page.number }} de {{ page.paginator.num_pages }}
+        </div>
+        <div class="col text-right">
+            {% if page.has_next %}
+                <a href="?page={{ page.next_page_number }}">Siguiente</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<script>
+    function descargarPDF() {
+        var identification = document.getElementById('identification').innerHTML;
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET','get/?identification='+identification+'/?date_exam='+date_exam, true);
+        xhr.responseType = 'blob';
+        xhr.onload = function () {
+            if (this.status === 200) {
+                var blob = new Blob([this.response], { type: 'application/pdf' });
+                var url = URL.createObjectURL(blob);
+                window.open(url);
+            }else {
+                alert('Hubo un error al llamar la función.');
+            }
+        };
+        xhr.send();
+    }
+</script>
+
+{% endblock %}

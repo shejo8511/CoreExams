@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INFORME ENDOSC&Oacute;PICO</title>
+    
+    <table style="width:100%" border="0.01" cellspacing="" cellpadding="5" >
+        <tbody>
+            <div style="text-align:right;font-size:12px">Fecha: {{examPatient.date_exam}}</div>
+            <tr><td colspan="3" style="text-align:center;font-size:18px">INFORME ENDOSC&Oacute;PICO</td></tr>
+            <tr>{{ logo }}
+                <td rowspan="3" width="20%"><img src="{{ logo }}" width="125" height="125"></td>
+                <td width="60%" style="font-size:16px;text-align:center;">Clinica / Laboratorio: {{ company.company_name }}</td>
+                <td rowspan="3" width="20%"><img src="{{ logo }}" width="125" height="125"></td>
+            </tr>
+            <tr>
+                <td style="font-size:16px;text-align:center">Dr. {{ company.name |add:' '}} {{ company.last_name  }} </td>
+            </tr>
+            <tr>
+                <td style="font-size:16px">Dir. {{ company.address }} <br/> Telf. {{ company.phone |add:' '}}</td>
+            </tr>
+            <tr >
+                <td style="font-size:14px;text-align:center">Ci: {{ examPatient.identification  }}</td>
+                <td style="font-size:14px;text-align:center">Paciente: {{ examPatient.full_name  }}</td>
+                <td style="font-size:14px;text-align:center">Edad: {{ examPatient.age  }}</td> 
+            </tr>
+        </tbody>
+    </table>
+</head>
+<br/><br/>
+<body>
+    <table>        
+        {% for grupo in grupos %}
+            <tr>
+                {% for imagen in grupo %}
+                    <td style="font-size:12px;text-align:center">Imagen <br/><img src="{{ruta}}{{imagen}}"></td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </table>
+    <table style="width:100%" border="0.01" cellspacing="" cellpadding="5" >
+        {% if diagnostic %}
+            <tr>
+                <td>
+                    <h1>Diagnostico / Resultado </h1>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p style="font-size:14px">{{ diagnostic }}</p>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td>
+                    <h1>Diagnostico / Resultado </h1>
+                </td>
+            </tr>
+            <td>
+                <p style="font-size:14px"></p>
+            </td>
+        {% endif %}
+    </table>
+</body>
+</html>

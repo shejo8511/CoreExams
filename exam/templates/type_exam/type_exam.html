@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  {% if message %}
+    <div id="alert-message" class="alert alert-warning" role="alert">
+        {{ message }}
+    </div>
+  {% endif %}
+  <div class="container">
+    <div class="row justify-content-center"> <!-- Agregamos justify-content-center para centrar -->
+      
+      <div class="card border-2 shadow rounded-3">
+        <div class="card-body p-4 p-sm-5">
+          <div class="text-center"> <!-- Agregar una clase de centrado -->
+            <h4>Tipo de Examen</h4>
+          </div>
+            <form method="POST" enctype="multipart/form-data">
+                <div class="form-row">
+                    {% csrf_token %}
+                    <div class="form-group col-md-10">
+                        <label for="inputNombre">Nombre</label>
+                        {{ type_exam_form.name }}
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-10">
+                      <label for="inputDescripcion">Descripcion</label>
+                      {{ type_exam_form.description }}
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Crear</button>
+                <a href="{% url 'list_type_exam' %}" class="btn btn-secondary">Regresar</a>
+            </form>
+          </div>
+        </div>
+    </div>
+  </div>
+{% endblock %}

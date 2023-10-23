@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% if message %}
+    <div id="alert-message" class="alert alert-warning" role="alert">
+        {{ message }}
+    </div>
+{% endif %}
+<h3 class="text-center">Listado de Tipo de Examen</h3>
+<div class="container">
+    <form method="GET" action="{% url 'type_exam' %}">
+        <div class="d-grid text-left">
+            <button type="submit" class="btn btn-primary">Crear</button>
+        </div>
+    </form>
+    <div class="row">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th scope="col">Id#</th>
+                <th scope="col">Nombre</th>
+                <th scope="col">Descripcion</th>
+            </tr>
+            </thead>
+            <tbody>
+                {% for objeto in listTypeExam %}
+                <tr>
+                    <td>{{ objeto.id }}</td>
+                    <td>{{ objeto.name }}</td>
+                    <td>{{ objeto.description }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="row">
+        <div class="col">
+            {% if page.has_previous %}
+                <a href="?page={{ page.previous_page_number }}">Anterior</a>
+            {% endif %}
+        </div>
+        <div class="col text-center">
+            Página {{ page.number }} de {{ page.paginator.num_pages }}
+        </div>
+        <div class="col text-right">
+            {% if page.has_next %}
+                <a href="?page={{ page.next_page_number }}">Siguiente</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

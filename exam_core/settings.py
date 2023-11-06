@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.template.defaultfilters',
     'rest_framework',
     'user',
     'company',
@@ -57,6 +58,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    #'django.middleware.cache.UpdateCacheMiddleware', # borrar la caché del navegador
 ]
 
 ROOT_URLCONF = 'exam_core.urls'
@@ -134,13 +136,13 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Carpeta para sonidos
-SOUNDS_ROOT_URL = os.path.join(BASE_DIR,'static/sounds/')
+#SOUNDS_ROOT_URL = os.path.join(BASE_DIR,'static/sounds/')
 # Carpeta para Imagenes
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
-MEDIA_ROOT_USUARIOS = os.path.join(BASE_DIR, 'media/usuarios/')
-MEDIA_LOGOS = os.path.join(BASE_DIR, 'logos')
 MEDIA_URL = '/media/'
-MEDIA_ROOT_SOUNDS = os.path.join(BASE_DIR, 'static/sounds/')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# Directorio donde se guardan las muestras
+MEDIA_EXAM_USUARIOS_ROOT = os.path.join(BASE_DIR, 'media/exams/usuarios/')
+#MEDIA_ROOT_SOUNDS = os.path.join(BASE_DIR, 'static/sounds/')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

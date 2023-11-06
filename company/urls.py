@@ -7,3 +7,4 @@ urlpatterns =[
     path('exams/list_exams/', views.listExams, name='list_exams'),
     path('company_edit/<int:company_id>/', views.company_edit, name='company_edit'),
 ]
+

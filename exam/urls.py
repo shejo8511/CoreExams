@@ -7,6 +7,7 @@ urlpatterns = [
     path('home/', userViews.home, name='home'),
     path('reports/reportExam01/', views.ReportExam01.as_view(), name='reportExam01'),
     path('guardar-captura/', views.guardar_captura, name='guardar-captura'),
+    path('guardar-select-diagnostic/', views.guardar_select_diagnostic, name='guardar-select-diagnostic'),
     path('stream/download-pdf/', views.download_pdf, name='download-pdf'),
     path('stream/pdf/',views.generate_pdf,name='generate_pdf'),
     path('stream/record_diagnostic/',views.record_diagnostic,name='record_diagnostic'),

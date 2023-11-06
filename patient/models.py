@@ -47,7 +47,7 @@ class ExamSample(models.Model):
     patientexam = models.ForeignKey(PatientExam,verbose_name='Muestras del Paciente',on_delete=models.PROTECT)
     company = models.ForeignKey(Company,verbose_name='Compania',on_delete=models.PROTECT)
     url_folder_sample = models.CharField(verbose_name='Url-Muestra PNG',max_length=5000)
-    sample_url = models.CharField(verbose_name='Url-Muestra PNG',max_length=5000)
+    sample_url = models.ImageField(blank=True, null=True,verbose_name='Url-Muestra PNG')
     save_date = models.DateField(blank=True, null=True)
     select = models.BooleanField(default=False)
     diagnostic = models.CharField(verbose_name="Diagnostico", max_length=2500, blank=True, null=True)

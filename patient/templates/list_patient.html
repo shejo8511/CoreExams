@@ -6,7 +6,8 @@
         {{ message }}
     </div>
 {% endif %}
-<h3 class="text-center">Listado de Pacientes | Empresa: {{company.company_name}}</h3>
+<h3 class="text-center">Listado de Examenes Por Pacientes </h3></br>
+<h4 class="text-center"> Empresa: {{company.company_name}} </h4>
 <div class="container">
     <div class="row">
         <table class="table table-striped">
@@ -16,6 +17,7 @@
                 <th scope="col">Nombre Completo</th>
                 <th scope="col">Edad</th>
                 <th scope="col">Fecha Examen</th>
+                <th scope="col">Tipo Examen</th>
                 <th scope="col">Examen</th>
             </tr>
             </thead>
@@ -26,10 +28,11 @@
                     <td>{{ objeto.patient.full_name }}</td>
                     <td>{{ objeto.patient.age }}</td>
                     <td id="date_exam">{{ objeto.date_exam }}</td>
+                    <td>{{ objeto.type_exam.name }}</td>
                     {% if objeto.exam_url %}
                         <td><a href="{% url 'abrir_pdf' objeto.id %}" target="_blank">Abrir PDF</a></td>
                     {% else %}
-                        <td></td>
+                        <td>N/A</td>
                     {% endif %}
                 </tr>
                 {% endfor %}

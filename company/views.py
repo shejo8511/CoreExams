@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
@@ -60,7 +61,7 @@ def company_edit(request, company_id):
         
         if request.method == 'POST':
             print("POST")
-            company_form = CompanyForm(request.POST, instance=company)
+            company_form = CompanyForm(request.POST,request.FILES, instance=company)
             user_form = CustomUserChangeForm(request.POST, instance=user)
             if company_form.is_valid() and user_form.is_valid():
                 company_form.save()
@@ -75,10 +76,11 @@ def company_edit(request, company_id):
             'company': company,
             'company_form': company_form,
             'user_form': user_form,
+            #'logos':settings.LOGOS,
         }
-
+        print("company_form: "+str(company_form))
         return render(request,'company_edit.html',context)
         #return render(request, 'register.html', {'user_form': user_form, 'company_form': company_form})
     except Exception as e:
         print("566")
-        return render(request, 'register.html', {'message' : e,'user_form': user_form, 'company_form': company_form})
+        return render(request, 'register.html', {'message' : e,'user_form': user_form, 'company_form': company_form,'company':company})

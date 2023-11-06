@@ -204,7 +204,7 @@ def register(request):
                     #Crear Carpeta
                     carpeta = request.POST['username']
                     directorio = os.getcwd()  # obtiene el directorio actual
-                    ruta = os.path.join(settings.MEDIA_ROOT_USUARIOS, carpeta)  # une el nombre de la carpeta con el directorio
+                    ruta = os.path.join(settings.MEDIA_EXAM_USUARIOS_ROOT, carpeta)  # une el nombre de la carpeta con el directorio
                     os.makedirs(ruta)  # crea la carpeta en la ruta especificada
                     print('LINEA 515')
                     return redirect('home')

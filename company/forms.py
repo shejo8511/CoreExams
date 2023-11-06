@@ -28,8 +28,8 @@ class CompanyForm(forms.ModelForm):
     last_name = forms.CharField(max_length="50",widget=forms.TextInput(attrs={'class':'form-control','placeholder':'Apellidos'}))
     phone = forms.CharField(max_length="10",widget=forms.TextInput(attrs={'class':'form-control','placeholder':'0720000000'}))
     address = forms.CharField(max_length="500",widget=forms.TextInput(attrs={'class':'form-control','placeholder':'Av. Calle. Segunda Numero:1234 Main St'}))
-    logo = forms.CharField(widget=forms.ClearableFileInput(attrs={'class':'form-control-file'}))
+    logo = forms.ImageField()
 
     class Meta:
         model = Company
-        fields = ('logo','company_name', 'name', 'last_name', 'identification','identification_type','phone','address')
+        fields = ('company_name', 'name', 'last_name', 'identification','identification_type','phone','address','logo',)

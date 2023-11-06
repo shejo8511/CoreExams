@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
+
 {% block content %}
 <style>
     .flex-container {
@@ -79,17 +79,31 @@
             <div id="detalleseleccion" name="detalleseleccion" style="overflow-x: hidden; overflow-y: scroll; width: 150%; border: 1px solid">
                 
                 {% for objeto in listSamplesExam %}
-                    
+                
                     <div class="col-md-4">
-                        <img src="{% static objeto.sample_url %}" alt="{{ objeto.name }}" style="width: 150px; height: 100px;">
-                        <input type="checkbox" id="select" value="{{ objeto.select }}" />
-                        <input type="text" id="diagnostic" value="{{ objeto.diagnostic }}" />
+                        <img id="image" src="{{ objeto.sample_url.url }}" alt="{{ objeto.name }}" style="width: 150px; height: 100px;">
+                        <input id="select" type="checkbox" value="{{ objeto.select }}" />
+                        <input id="diagnostic" type="text" value="{{ objeto.diagnostic }}" />
                     </div>  
                     
                 {% endfor %}
             </div>
         </div>
+        <button type="button" onclick="document.dispatchEvent(new Event('saveSelect'));">Guardar</button>
     </div>
 </div>
+<script>
+    var detalleseleccion = document.getElementById("detalleseleccion");
+     // Capturar pantalla al presionar la tecla "c"
+     document.addEventListener('saveSelect', function(event) {
+        console.log("dentro saveSelect");
+        var formData = new FormData();
+        formData.append('detalleseleccion', JSON.stringify(detalleseleccion.serialize()));
 
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/exam/guardar-select-diagnostic/');
+        xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}');
+        xhr.send(formData);
+     })
+</script>
 {% endblock %}

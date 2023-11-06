@@ -2,6 +2,7 @@ import os
 from os import path
 import pytz
 import base64
+import json
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseServerError, JsonResponse
 from django.shortcuts import render, redirect
@@ -99,6 +100,7 @@ def listTypeExam(request):
 
 @login_required
 @csrf_exempt
+@transaction.atomic
 def typeExam(request):
     try:
         company_user = Company.objects.filter(user_id=request.user.id).first()
@@ -115,10 +117,8 @@ def typeExam(request):
         else:
             #GET
             type_exam_form = TypeExamForm()
-        print('line36')
         return render(request,'type_exam/type_exam.html',{'company': company_user,'type_exam_form':type_exam_form})
     except Exception as e:
-        print('Exeption: ' + str(e))
         return render(request, 'type_exam/type_exam.html', {'message' : e,'type_exam_form': type_exam_form,'company':company_user})
 
 @login_required
@@ -138,7 +138,8 @@ def guardar_captura(request):
             # Decodifica la captura de pantalla desde Base64
             imagen_decodificada = base64.b64decode(captura_pantalla.split(',')[1])
             # Guarda la captura de pantalla en el sistema de archivos
-            folder = os.path.join(settings.MEDIA_ROOT_USUARIOS + request.user.username + '/' + idExam + '_' + identification + '_'+ typeExam +'_' + dateNowEcuador())
+            folder = os.path.join(settings.MEDIA_EXAM_USUARIOS_ROOT + request.user.username + '/' + idExam + '_' + identification + '_'+ typeExam +'_' + dateNowEcuador())
+            print("folder: "+str(folder))
             if not os.path.exists(folder):
                 os.makedirs(folder)
             else:
@@ -147,7 +148,7 @@ def guardar_captura(request):
                         name = idExam + '_' + identification + '_'+ typeExam +'_' + dateNowEcuador()
                         idPatient = consultPatient(identification,company_user.id)
                         idTypeExam = consultTypeExamName(typeExam)
-                        sample_url = folder + identification +'_'+ typeExam +'_'+ dateTimeNowEcuador() +'.jpg'
+                        sample_url = folder +'/'+ identification +'_'+ typeExam +'_'+ dateTimeNowEcuador() +'.jpg'
                         ResExamSample = savePatientImg(name,idPatient,idTypeExam,idExam,company_user.id,folder,sample_url,request.user.id)
                         if not ResExamSample:
                             return render(request, 'stream/videoStream.html', {'message' : e,'company':company_user})
@@ -170,6 +171,7 @@ def guardar_captura(request):
 
 @login_required
 @csrf_exempt
+@transaction.atomic
 def videoStream(request):
     company_user = Company.objects.filter(user_id=request.user.id).first()
     try:
@@ -179,21 +181,21 @@ def videoStream(request):
             full_name = request.POST.get('full_name')
             typeExam = request.POST.get('typeExam')
             # Crea el Paciente o devulve el paciente si existe
-            print("line 177: objPatient; ")
+            print("line 183: objPatient; ")
             objPatient = createPatient(identification,full_name,company_user.id,birthday,request.user.id)
-            print("line 179: objPatient; "+str(objPatient))
-            print("line 180: company_user; "+str(company_user))
-            print("line 180: company_user.id; "+str(company_user.id))
+            print("line 185: objPatient; "+str(objPatient))
+            print("line 186: company_user; "+str(company_user))
+            print("line 187: company_user.id; "+str(company_user.id))
             # Verfica que el paciente se creo o devuelve el id del paciente
             if objPatient:
-                print("line 184: objPatient; "+str(objPatient))
+                print("line 190: objPatient; "+str(objPatient))
                 patientExam = createPatientExam(objPatient,typeExam,company_user.id,request.user.id)
-                print("linea 186: patientExam: "+str(patientExam))
-                if os.path.isdir((settings.MEDIA_ROOT_USUARIOS + request.user.username)):
+                print("linea 192: patientExam: "+str(patientExam))
+                if os.path.isdir((settings.MEDIA_EXAM_USUARIOS_ROOT + request.user.username)):
                     #Crear Carpeta
                     nueva_carpeta = str(str(patientExam) + '_' +request.POST.get('identification')) + '_' + str(consultTypeExam(request.POST.get('typeExam'))).upper() + '_' + dateNowEcuador()
                     #directorio = os.getcwd()  # obtiene el directorio actual
-                    ruta = os.path.join(settings.MEDIA_ROOT_USUARIOS + request.user.username+'/', nueva_carpeta)  # une el nombre de la carpeta con el directorio
+                    ruta = os.path.join(settings.MEDIA_EXAM_USUARIOS_ROOT + request.user.username+'/', nueva_carpeta)  # une el nombre de la carpeta con el directorio
                     if not os.path.isdir(ruta):
                         os.makedirs(ruta)  #crea la carpeta en la ruta especificada
                 context = { 'company':company_user,
@@ -204,7 +206,7 @@ def videoStream(request):
                         'idExam':patientExam}
                 return render(request, 'stream/videoStream.html',context)
         if request.method == 'GET':
-            #print("linea 202: videoStream")
+            print("linea 208: videoStream")
             #type_exams = TypeExam.objects.filter(enabled=1)
             #type_exams_list = list(type_exams.values('id', 'name'))
             #context = {
@@ -227,44 +229,50 @@ def examsSelect(request):
     try:
         if request.method == 'POST':
             print("linea 229: POST ID")
-            #print("linea:225: examsSelect: - identification: "+str(request.POST.get('identification'))+" birthday: "+ str(request.POST.get('birthday')) +" full_name: "+str(request.POST.get('full_name'))+" typeExam: "+str(request.POST.get('typeExam'))+" idExam: "+str(request.POST.get('idExam')))
-            #identification = request.POST.get('identification')
-            #birthday = request.POST.get('birthday')
-            #full_name = request.POST.get('full_name')
-            #typeExam = request.POST.get('typeExam')
             idExam = request.POST.get('idExam')
-            print("examsSelect - linea 236: idExam: "+str(idExam))
             objExamPatient = PatientExam.objects.filter(id=idExam,company=company_user.id).values()
-            #print("linea 237: objExamPatient " + str(objExamPatient))
-            #print("linea 238: patient " + str(objExamPatient[0]['patient_id']))
             objPatient = consultPatientObj(objExamPatient[0]['patient_id'])
             listSamplesExam = ExamSample.objects.filter(patientexam=idExam)
-            print("linea 242: listSamplesExam " + str(listSamplesExam))
-            print("linea 243: birthday " + str(objPatient[0]['birthday'].strftime("%d/%m/%Y")))
-            #print("linea 234: patient " + str(objExamPatient.patient))
+            birthday = objPatient[0]['birthday'].strftime('%Y-%m-%d')
             context = { 'company':company_user,
                         'identification':objPatient[0]['identification'],
-                        'birthday':objPatient[0]['birthday'].strftime("%d/%m/%Y"),
+                        'birthday':birthday,
                         'full_name':objPatient[0]['full_name'],
                         'typeExam':consultTypeExam(objExamPatient[0]['type_exam_id']),
                         'idExam':idExam,
                         'listSamplesExam':listSamplesExam
             }
-            #print("linea:238: examsSelect: - identification: "+str(identification)+" birthday: "+ str(birthday) +" full_name: "+str(full_name)+" typeExam: "+str(typeExam)+" idExam: "+str(idExam))
-            print("linea 239: ")
             return render(request,'reports/examsSelect.html',context)
         if request.method == 'GET':
-            #print(" examsSelect linea:258 - GET")
             return redirect("home")
     except Exception as e:
         return render(request, 'stream/videoStream.html', {'message' : e,'company':company_user})
+
+@login_required
+@csrf_exempt
+def guardar_select_diagnostic(request):
+    try:
+        company_user = Company.objects.filter(user_id=request.user.id).first()
+        print("Dentro de Guardar-captura: linea 63")
+        if request.method == 'POST':
+            # Obtiene los datos del Paciente
+            listSamplesExam = json.loads(request.POST.get('listSamplesExam'))
+            
+            print("listSamplesExam: "+str(listSamplesExam))
+            # Devuelve una respuesta de éxito
+            return JsonResponse({'success': 'Datos guardados con éxito'}, status=200)
+        else:
+            # Si se recibe un método de solicitud diferente, envía una respuesta de error
+            return JsonResponse({'error': 'Método no permitido'}, status=405)
+    except HttpResponseServerError as message:
+        print("error: "+ str(message))
 
 @login_required
 def download_pdf(request):
     identification = str(request.GET.get('identification'))
     #print("identification: " + str(request.GET.get('identification')))
     # Obtener la ruta del archivo PDF
-    pdf_path = os.path.join(settings.MEDIA_ROOT_USUARIOS + request.user.username + '/' + identification + '_' + dateNowEcuador() , identification + '_EXAM_'+ str(dateNowEcuador()) +'.pdf')
+    pdf_path = os.path.join(settings.MEDIA_EXAM_USUARIOS_ROOT + request.user.username + '/' + identification + '_' + dateNowEcuador() , identification + '_EXAM_'+ str(dateNowEcuador()) +'.pdf')
     #print('pdf_path: ',pdf_path)
     filename = (identification +'_EXAM_'+ str(dateNowEcuador()))+'.pdf'
     print("filename: "+filename)
@@ -281,26 +289,26 @@ def download_pdf(request):
 def generate_pdf(request):
     #if method == "GET":
     identification = request.GET.get('identification')
-    #filename_pdf = settings.MEDIA_ROOT_USUARIOS +request.user.username+'/'+identification+'_'+dateNowEcuador()+'/'+identification+'_EXAM_'+dateNowEcuador()+".pdf"
+    #filename_pdf = settings.MEDIA_EXAM_USUARIOS_ROOT +request.user.username+'/'+identification+'_'+dateNowEcuador()+'/'+identification+'_EXAM_'+dateNowEcuador()+".pdf"
     #print("filename_pdf: "+ str(filename_pdf))
-    #imagenes_jpg = [archivo for archivo in os.listdir(settings.MEDIA_ROOT_USUARIOS + request.user.username +'/'+ identification +'_'+ dateNowEcuador()) if archivo.endswith(".jpg")]
-    #imagenes_jpg_bytes = [open(settings.MEDIA_ROOT_USUARIOS +request.user.username +'/'+ identification +'_'+ dateNowEcuador() +'/'+ archivo, "rb").read() for archivo in imagenes_jpg]
+    #imagenes_jpg = [archivo for archivo in os.listdir(settings.MEDIA_EXAM_USUARIOS_ROOT + request.user.username +'/'+ identification +'_'+ dateNowEcuador()) if archivo.endswith(".jpg")]
+    #imagenes_jpg_bytes = [open(settings.MEDIA_UMEDIA_EXAM_USUARIOS_ROOTRL +request.user.username +'/'+ identification +'_'+ dateNowEcuador() +'/'+ archivo, "rb").read() for archivo in imagenes_jpg]
     
     #lista_imagenes = imagenes_jpg_bytes
 
     # Obtenemos la lista de imágenes
-    #ruta_imagenes = settings.MEDIA_ROOT_USUARIOS +request.user.username+'/'+identification+'_'+dateNowEcuador()
-    #lista_imagenes = [archivo for archivo in os.listdir(settings.MEDIA_ROOT_USUARIOS + request.user.username +'/'+ identification +'_'+ dateNowEcuador()) if archivo.endswith(".jpg")]
+    #ruta_imagenes = settings.MEDIA_EXAM_USUARIOS_ROOT +request.user.username+'/'+identification+'_'+dateNowEcuador()
+    #lista_imagenes = [archivo for archivo in os.listdir(settings.MEDIA_EXAM_USUARIOS_ROOT + request.user.username +'/'+ identification +'_'+ dateNowEcuador()) if archivo.endswith(".jpg")]
     #print("ruta_imagenes: " + ruta_imagenes)
     #print("lista_imagenes: " + str(lista_imagenes))
 
     #-----------------------------
     # Ruta donde se encuentran las imágenes
-    ruta_imagenes = str(settings.MEDIA_ROOT_USUARIOS + request.user.username +'/'+ identification +'_'+ dateNowEcuador())
+    ruta_imagenes = str(settings.MEDIA_EXAM_USUARIOS_ROOT + request.user.username +'/'+ identification +'_'+ dateNowEcuador())
     #nombre_pdf = str(identification + '_EXAM_'+ dateNowEcuador()+'.pdf')
-    ruta_pdf = settings.MEDIA_ROOT_USUARIOS +request.user.username+'/'+identification+'_'+dateNowEcuador()+'/'+identification+'_EXAM_'+dateNowEcuador()+".pdf"
+    ruta_pdf = settings.MEDIA_EXAM_USUARIOS_ROOT +request.user.username+'/'+identification+'_'+dateNowEcuador()+'/'+identification+'_EXAM_'+dateNowEcuador()+".pdf"
     #imagenes = [os.path.join(ruta_imagenes, f) for f in os.listdir(ruta_imagenes) if os.path.isfile(os.path.join(ruta_imagenes, f))]
-    imagenes = [archivo for archivo in os.listdir(settings.MEDIA_ROOT_USUARIOS + request.user.username +'/'+ identification +'_'+ dateNowEcuador()) if archivo.endswith(".jpg")]
+    imagenes = [archivo for archivo in os.listdir(settings.MEDIA_EXAM_USUARIOS_ROOT + request.user.username +'/'+ identification +'_'+ dateNowEcuador()) if archivo.endswith(".jpg")]
     print("imagenes 240: "+str(imagenes))
     #Remover PDF
     if os.path.exists(ruta_pdf):
@@ -409,7 +417,7 @@ def generate_pdf(request):
     # Borramos el PDF temporal
     #os.remove(nombre_pdf)
 
-    #with open(settings.MEDIA_ROOT_USUARIOS +request.user.username+'/'+identification+'_'+dateNowEcuador()+'/'+identification+'_EXAM_'+dateNowEcuador()+".pdf", "wb") as documento:
+    #with open(settings.MEDIA_EXAM_USUARIOS_ROOT +request.user.username+'/'+identification+'_'+dateNowEcuador()+'/'+identification+'_EXAM_'+dateNowEcuador()+".pdf", "wb") as documento:
     #    documento.write(titulo)
         #print("imagenes_jpg: "+str(imagenes_jpg))
         #print("imagenes_jpg_bytes: "+str(imagenes_jpg_bytes))
@@ -421,6 +429,7 @@ def generate_pdf(request):
     download_pdf(request)
     return JsonResponse({'mensaje': 'La función se ejecutó correctamente'})
 
+@transaction.atomic
 def record_diagnostic(request):
     if request.method == 'POST':
         diagnostic = request.POST.get('diagnostic')
@@ -458,12 +467,12 @@ class ReportExam01(View):
         ##=================##
         #-----------------------------
         #Ruta donde se encuentran las imágenes
-        ruta_dir_pdf = str(settings.MEDIA_ROOT_USUARIOS + request.user.username +'/'+ identification +'_'+ dateNowEcuador()+'/')
-        ruta_imagenes = str(settings.MEDIA_ROOT_USUARIOS + request.user.username +'/'+ identification +'_'+ dateNowEcuador()+'/')
+        ruta_dir_pdf = str(settings.MEDMEDIA_EXAM_USUARIOS_ROOTIA_URL + request.user.username +'/'+ identification +'_'+ dateNowEcuador()+'/')
+        ruta_imagenes = str(settings.MEDIA_EXAM_USUARIOS_ROOT + request.user.username +'/'+ identification +'_'+ dateNowEcuador()+'/')
         #nombre_pdf = str(identification + '_EXAM_'+ dateNowEcuador()+'.pdf')
-        #ruta_pdf = settings.MEDIA_ROOT_USUARIOS +request.user.username+'/'+identification+'_'+dateNowEcuador()+'/'+identification+'_EXAM_'+dateNowEcuador()+".pdf"
+        #ruta_pdf = settings.MEDIA_EXAM_USUARIOS_ROOT +request.user.username+'/'+identification+'_'+dateNowEcuador()+'/'+identification+'_EXAM_'+dateNowEcuador()+".pdf"
         #imagenes = [os.path.join(ruta_imagenes, f) for f in os.listdir(ruta_imagenes) if os.path.isfile(os.path.join(ruta_imagenes, f))]
-        imagenes = [archivo for archivo in os.listdir(settings.MEDIA_ROOT_USUARIOS + request.user.username +'/'+ identification +'_'+ dateNowEcuador()) if archivo.endswith(".jpg")]
+        imagenes = [archivo for archivo in os.listdir(settings.MEDIA_EXAM_USUARIOS_ROOT + request.user.username +'/'+ identification +'_'+ dateNowEcuador()) if archivo.endswith(".jpg")]
         grupos = [imagenes[i:i+3] for i in range(0, len(imagenes), 3)]
         #primeros_seis_imagenes = imagenes[:6]
         print("grupos 394: "+str(grupos))

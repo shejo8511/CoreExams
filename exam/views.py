@@ -4,7 +4,7 @@ import pytz
 import base64
 import json
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseServerError, JsonResponse
+from django.http import HttpResponse, HttpResponseServerError, FileResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError, transaction
@@ -22,6 +22,12 @@ from company.models import Company
 from .models import TypeExam
 from patient.models import Patient, PatientExam, ExamSample
 from patient.views import createPatient, createPatientExam, savePatientImg
+#PDF
+#from reportlab.pdfgen import canvas
+#from reportlab.lib.pagesizes import A4,landscape
+from django.template.loader import get_template
+from io import BytesIO
+from xhtml2pdf import pisa
 
 #Fechas y Horas
 def dateTimeNowEcuador():
@@ -62,6 +68,16 @@ def dateNowEcuador():
 def consultTypeExam(id):
     type_exam = TypeExam.objects.get(id=id)
     return type_exam
+
+# Consulta PatientExam ID
+def consultPatientExam(id):
+    patientExam = PatientExam.objects.get(id=id)
+    return patientExam
+
+# Consulta de Tipo Examen ID
+def consultPatientSampleExam(id):
+    patientSampleExam = ExamSample.objects.get(id=id)
+    return patientSampleExam
 
 # Consulta de Tipo Examen Nombre
 def consultTypeExamName(name):
@@ -139,7 +155,9 @@ def guardar_captura(request):
             imagen_decodificada = base64.b64decode(captura_pantalla.split(',')[1])
             # Guarda la captura de pantalla en el sistema de archivos
             folder = os.path.join(settings.MEDIA_EXAM_USUARIOS_ROOT + request.user.username + '/' + idExam + '_' + identification + '_'+ typeExam +'_' + dateNowEcuador())
+            url = settings.MEDIA_EXAMS_USUARIOS_URL + request.user.username + '/' + idExam + '_' + identification + '_' + typeExam + '_' + dateNowEcuador()
             print("folder: "+str(folder))
+            print("url: "+str(url))
             if not os.path.exists(folder):
                 os.makedirs(folder)
             else:
@@ -148,8 +166,8 @@ def guardar_captura(request):
                         name = idExam + '_' + identification + '_'+ typeExam +'_' + dateNowEcuador()
                         idPatient = consultPatient(identification,company_user.id)
                         idTypeExam = consultTypeExamName(typeExam)
-                        sample_url = folder +'/'+ identification +'_'+ typeExam +'_'+ dateTimeNowEcuador() +'.jpg'
-                        ResExamSample = savePatientImg(name,idPatient,idTypeExam,idExam,company_user.id,folder,sample_url,request.user.id)
+                        sample_url = url +'/'+ identification +'_'+ typeExam +'_'+ dateTimeNowEcuador() +'.jpg'
+                        ResExamSample = savePatientImg(name,idPatient,idTypeExam,idExam,company_user.id,url,sample_url,request.user.id)
                         if not ResExamSample:
                             return render(request, 'stream/videoStream.html', {'message' : e,'company':company_user})
             #else:
@@ -221,32 +239,278 @@ def videoStream(request):
         print("linea 213: videoStream-e: "+str(e))
         return render(request, 'home.html', {'message' : e,'company':company_user})
 
+
+    print("line 266 - user: "+ str(iduser))
+    print("line 267 - idExam: "+ str(idExam))
+    try:
+        print("linea 269 generate_pdf: "+str(iduser))
+        company_user = Company.objects.filter(user_id=iduser).first()
+        #-----------------------------
+        # Ruta donde se encuentran las imágenes
+        ruta_imagenes = ExamSample.objects.filter(patientexam_id=idExam).first()
+        examPatient = PatientExam.objects.filter(id=idExam).first()
+        patient = Patient.objects.filter(id=examPatient.patient_id).first()
+        print("line 276 - ruta_imagenes.url_folder_sample: " + str(ruta_imagenes.url_folder_sample))
+    ##    ruta_imagenes = str(settings.MEDIA_EXAM_USUARIOS_ROOT + request.user.username +'/'+ identification +'_'+ dateNowEcuador())
+        ruta_imagenes = str(ruta_imagenes.url_folder_sample)
+        #nombre_pdf = str(identification + '_EXAM_'+ dateNowEcuador()+'.pdf')
+        print("line 280 - patient.identification: "+str(patient.identification))
+        print("line 281 - patient: "+str(examPatient.type_exam))
+        nombre_pdf = str(patient.identification + '_' + str(examPatient.type_exam) + '_' + dateNowEcuador() + '.pdf')
+        print("linea 283 - nombre del PDF: " + nombre_pdf)
+        print("linea 284 - PDF_SAVE: " + settings.PDF_SAVE_ROOT)
+    ##    ruta_pdf = settings.MEDIA_EXAM_USUARIOS_ROOT +request.user.username+'/'+identification+'_'+dateNowEcuador()+'/'+identification+'_EXAM_'+dateNowEcuador()+".pdf"
+        ruta_pdf = settings.PDF_SAVE_ROOT + username + '/' + idExam + '_' + patient.identification + '_' +str(examPatient.type_exam) + '_' + dateNowEcuador() + '/' + patient.identification + '_' + str(examPatient.type_exam) + '_' + dateNowEcuador() + '.pdf'
+        print("linea 287 ruta_pdf: "+ str(ruta_pdf))
+        #imagenes = [os.path.join(ruta_imagenes, f) for f in os.listdir(ruta_imagenes) if os.path.isfile(os.path.join(ruta_imagenes, f))]
+        print("linea 289 - EXAMS_SAMPLE_ROOT: " + settings.EXAMS_SAMPLE_ROOT)
+        #imagenes = [archivo for archivo in os.listdir(settings.EXAMS_SAMPLE_ROOT + username +'/'+ idExam +'_' + patient.identification + '_'+ str(examPatient.type_exam) +'_'+ dateNowEcuador()) if archivo.endswith(".jpg")]
+        imagenes = []
+        list_img_select = ExamSample.objects.filter(patientexam=idExam,select = 1)
+        print("line 293 - list_img_select: " + str(list_img_select))
+        for img in list_img_select:
+            print("line 295 - img: "+ str(img.id))
+            objExamPatient = ExamSample.objects.get(id=img.id)
+            imagenes.append([objExamPatient.name+'.jpg'])
+        print("imagenes 298: "+str(imagenes))
+        #Remover PDF
+        if os.path.exists(ruta_pdf):
+            os.remove(ruta_pdf)
+
+        # Crear PDF
+        pdf = canvas.Canvas(ruta_pdf, pagesize=A4)
+        titulo = "Resultado de Examenes"
+        pdf.setFont("Courier", 18)
+        pdf.drawString(10, 800, titulo)
+        w, h = A4
+        xlist = [100, 150, 350]
+        ylist = [h - 5, h - 120]
+        pdf.grid(xlist, ylist)
+
+        # Guardar y cerrar el PDF
+        print("linea 314 : generate_pdf")
+        pdf.save()
+        print("linea 316 : generate_pdf")
+        return True
+        #print("linea 321 : username: "+username)
+        #print("linea 322 : idExam: "+idExam)
+        #download_pdf(username,idExam)
+    except Exception as e:
+        return render(request, 'reports/examsSelect.html', {'message' : e,'company':company_user})
+
+#Renderiza el HTML para Crear el PDF
+def render_to_pdf(template_src, context_dict={}):
+    template = get_template(template_src)
+    html  = template.render(context_dict)
+    result = BytesIO()
+    pdf = pisa.pisaDocument(BytesIO(html.encode("utf-8")), result,encoding='utf-8')
+    if not pdf.err:
+        return HttpResponse(result.getvalue(), content_type='application/pdf')
+    return None
+
+# Clase para Reporte.
+class ReportExam01(View):
+
+    def getPDF(iduser,username,idExam):
+        print("get-ReportExam01")
+        #identification = str(request.GET.get('identification'))
+        ruta_imagenes = ExamSample.objects.filter(patientexam_id=idExam).first()
+        examPatient = PatientExam.objects.filter(id=idExam).first()
+        patient = Patient.objects.filter(id=examPatient.patient_id).first()
+        #Ruta donde se encuentran las imágenes
+        print("line 335 - examPatient.type_exam: " +str(examPatient.type_exam))
+        ruta_dir_pdf = str(settings.EXAMS_SAMPLE_ROOT + username +'/'+ idExam + '_' + patient.identification + '_' + str(examPatient.type_exam) +'_'+ dateNowEcuador()+'/')
+        ruta_imagenes = str(settings.EXAMS_SAMPLE_ROOT + username +'/'+ idExam + '_' + patient.identification + '_' + str(examPatient.type_exam) +'_'+ dateNowEcuador()+'/')
+        ruta_img = str('media/exams/usuario/'+ username + '/' + idExam + '_' + patient.identification + '_' + str(examPatient.type_exam) +'_'+ dateNowEcuador()+'/')
+        #nombre_pdf = str(identification + '_EXAM_'+ dateNowEcuador()+'.pdf')
+        #ruta_pdf = settings.MEDIA_EXAM_USUARIOS_ROOT +request.user.username+'/'+identification+'_'+dateNowEcuador()+'/'+identification+'_EXAM_'+dateNowEcuador()+".pdf"
+        #imagenes = [os.path.join(ruta_imagenes, f) for f in os.listdir(ruta_imagenes) if os.path.isfile(os.path.join(ruta_imagenes, f))]
+        #imagenes = [archivo for archivo in os.listdir(settings.MEDIA_EXAM_USUARIOS_ROOT + request.user.username +'/'+ identification +'_'+ dateNowEcuador()) if archivo.endswith(".jpg")]
+        imagenes = []
+        diagnostic = []
+        #list_img_select = ExamSample.objects.filter(patientexam=idExam,select = 1)
+        #print("line 329 - list_img_select: " + str(list_img_select))
+        # Consulta que extrae un objeto específico
+        # Consulta que devuelve un objeto con los valores de los campos especificados
+        sample_exam = ExamSample.objects.filter(patientexam=idExam, select=1).all()
+        #print("line 330 - sample_exam: " + str(sample_exam))
+        for sample in sample_exam:
+            print("line 333 - id: "+ str(sample.id))
+            print("line 334 - sample_url: "+ str(sample.sample_url))
+            print("line 335 - diagnostic: "+ str(sample.diagnostic))
+            #objExamPatient = ExamSample.objects.get(id=img.id)
+            #imagenes.append(objExamPatient.sample_url)
+            #diagnostic.append(objExamPatient.diagnostic)
+
+
+        grupos = [imagenes[i:i+3] for i in range(0, len(imagenes), 3)]
+        grupos_dig = [diagnostic[i:i+3] for i in range(0, len(diagnostic), 3)]
+        #primeros_seis_imagenes = imagenes[:6]
+        print("grupos 339: "+str(grupos))
+        print("grupos_dig 340: "+str(grupos_dig))
+        ##=================##
+        company = Company.objects.get(user_id=iduser)
+        #patient = PatientExam.objects.get(identification=examPatient.identification,date_exam=dateNowEcuador())
+        #nombreCompany = company.company_name
+        logo = company.logo #settings.STATIC_IMG_URL + 'noLogo.jpg'
+        print("339 logo: "+str(logo))
+        logo_url = settings.MEDIA_ROOT +'/' + str(logo)
+        print("341 logo_url: "+str(logo_url))
+        #print("identification: " + str(identification))
+        #print("*args: " + str(*args))
+        #print("**kwargs: " + str(**kwargs))
+        data = {
+            'patient': patient,
+            #'diagnostic':examPatient.diagnostic,
+            'logo':logo_url,
+            'company': company,
+            #'imagenes':primeros_seis_imagenes,
+            'grupos':grupos,
+            'grupos_dig':grupos_dig,
+            'sample_exam':sample_exam,
+            'ruta':ruta_img
+        }
+        #request_path = request.path
+        print("line 375")
+        #print(request_path)
+        # Guarda el PDF en la ruta especificada
+        
+        pdf = render_to_pdf('reports/reportExam01.html', data)
+        print("line 375" + str(pdf))
+        if pdf:
+            print("line 382")
+            nombrePDF = idExam + '_' + patient.identification + '_' + str(examPatient.type_exam) + '_' + dateNowEcuador()+'.pdf'
+            ruta_pdf = os.path.join(ruta_dir_pdf, nombrePDF)
+            examPatient.exam_url = ruta_dir_pdf + nombrePDF
+            with open(ruta_pdf, 'wb') as f:
+                f.write(pdf.content)
+            examPatient.save()
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="'+nombrePDF+'.pdf"'
+        return response
+
+    def guardarPDF(request,pdf):
+        pass
+
 @login_required
-@csrf_exempt 
+@csrf_exempt
+#@transaction.atomic
 def examsSelect(request):
-    print("examsSelect - linea 225: ")
+    print("examsSelect - linea 351: ")
     company_user = Company.objects.filter(user_id=request.user.id).first()
     try:
+        # Process the diagnostic text
+        idExam = 0
+        diagnostic_list = []
+        select_list = []
         if request.method == 'POST':
-            print("linea 229: POST ID")
             idExam = request.POST.get('idExam')
+            diagnostic_general = request.POST.get('diagnostic_general')
+            print("POST - line: 409: "+str(idExam))
+            print("POST - linea 410: ")
+            print("POST - linea 411: "+str(diagnostic_general))
+            #listSamplesExam = request.POST.getlist('listSamplesExam')
+            select_value = request.POST.getlist('select')
+            #print("select_value - linea 239: " + str(select_value))
+            
+            # Create List for Select
+            for row in select_value:
+                id_object, select = row.split(',')
+                select_list.append([id_object, select])
+
+            diagnostic = request.POST.getlist('diagnostic')
+            #print("diagnostic_list - linea 238: " + str(diagnostic))
+            
+            # Create List for diagnostic
+            for select_value, diagnostic in zip(select_value, diagnostic):
+                id_object, value = select_value.split(',')
+                diagnostic_list.append([id_object,diagnostic])
+            
+            #print("diagnostic_list - linea 244: " + str(diagnostic_list))
+            
+            #Update Select
+            for row_select in select_list:
+                id_select, select = row_select
+                objSampleExam = consultPatientSampleExam(id_select)
+                objSampleExam.select = True
+                objSampleExam.save()
+                #print("id_select - linea 258: " + str(id_select))
+                #print("select - linea 259: " + str(select))
+            
+            #Update Diagnostic
+            for row_diagnostic in diagnostic_list:
+                id_diagnostic, diagnostic = row_diagnostic
+                objSampleExam = consultPatientSampleExam(id_diagnostic)
+                objSampleExam.diagnostic = diagnostic
+                objSampleExam.save()
+                #print("id_diagnostic - linea 248: " + str(id_diagnostic))
+                #print("diagnostic - linea 249: " + str(diagnostic))
+                # Buscar el objeto en la base de datos
+                #object = get_object_by_id(id_object)
+
+                # Actualizar el objeto en la base de datos
+                #object.status = True
+                #update_object(object)
+            print("POST - linea 454: ")
+            objPatientExam = consultPatientExam(idExam)
+            print("POST - linea 454: "+str(idExam))
+            print("POST - linea 454: "+str(objPatientExam))
+            objPatientExam.diagnostic_general = diagnostic_general
+            objPatientExam.save()
+            print("line 382 - ExamSample: ")
+            ReportExam01.getPDF(request.user.id,request.user.username,idExam)
+            #print("line 383 - idExam: " + str(idExam))
+            #if generate_pdf(request.user.id,request.user.username,idExam):
+            #    print("generate_pdf 385 Exams: ")
+            #    print("request.user.id 387 Exams: " + str(request.user.id))
+            #    print("request.user.username 387 Exams: " + str(request.user.username))
+            #    print("idExam 388 idExams: " + str(idExam))
+            #    response = pdf_download(request.user.id,request.user.username,idExam)
+            context = { 'company':company_user,
+                        #'identification':objPatient[0]['identification'],
+                        #'birthday':birthday,
+                        #'full_name':objPatient[0]['full_name'],
+                        #'typeExam':consultTypeExam(objExamPatient[0]['type_exam_id']),
+                        #'idExam':idExam,
+                        #'listSamplesExam':listSamplesExam
+            }
+            return redirect("home")
+        if request.method == 'GET':
+            print("linea 419: GET examsSelect")
+            idExam = request.GET.get('idExam')
+            print("linea 421: GET idExam: " + idExam)
             objExamPatient = PatientExam.objects.filter(id=idExam,company=company_user.id).values()
             objPatient = consultPatientObj(objExamPatient[0]['patient_id'])
-            listSamplesExam = ExamSample.objects.filter(patientexam=idExam)
+            listSamplesExam = ExamSample.objects.filter(patientexam_id=idExam)
             birthday = objPatient[0]['birthday'].strftime('%Y-%m-%d')
+            diagnostic_general = objExamPatient[0]['diagnostic_general']
             context = { 'company':company_user,
                         'identification':objPatient[0]['identification'],
                         'birthday':birthday,
                         'full_name':objPatient[0]['full_name'],
                         'typeExam':consultTypeExam(objExamPatient[0]['type_exam_id']),
                         'idExam':idExam,
-                        'listSamplesExam':listSamplesExam
+                        'listSamplesExam':listSamplesExam,
+                        'diagnostic_general': diagnostic_general,
             }
             return render(request,'reports/examsSelect.html',context)
+    except Exception as e:
+        return render(request, 'reports/examsSelect.html', {'message' : e,'company':company_user})
+
+@login_required
+@csrf_exempt
+def saveExams(request,idExam):
+    print("saveExams - linea 256: ")
+    company_user = Company.objects.filter(user_id=request.user.id).first()
+    try:
+        if request.method == 'POST':
+            print("saveExams - linea 260: ")
+            return redirect("home")
         if request.method == 'GET':
+            print("saveExams - linea 263: ")
             return redirect("home")
     except Exception as e:
-        return render(request, 'stream/videoStream.html', {'message' : e,'company':company_user})
+        return render(request, 'reports/examsSelect.html', {'message' : e,'company':company_user})
 
 @login_required
 @csrf_exempt
@@ -285,150 +549,6 @@ def download_pdf(request):
     response['Content-Disposition'] = 'inline; filename="'+filename+'"'
     return response
 
-@login_required
-def generate_pdf(request):
-    #if method == "GET":
-    identification = request.GET.get('identification')
-    #filename_pdf = settings.MEDIA_EXAM_USUARIOS_ROOT +request.user.username+'/'+identification+'_'+dateNowEcuador()+'/'+identification+'_EXAM_'+dateNowEcuador()+".pdf"
-    #print("filename_pdf: "+ str(filename_pdf))
-    #imagenes_jpg = [archivo for archivo in os.listdir(settings.MEDIA_EXAM_USUARIOS_ROOT + request.user.username +'/'+ identification +'_'+ dateNowEcuador()) if archivo.endswith(".jpg")]
-    #imagenes_jpg_bytes = [open(settings.MEDIA_UMEDIA_EXAM_USUARIOS_ROOTRL +request.user.username +'/'+ identification +'_'+ dateNowEcuador() +'/'+ archivo, "rb").read() for archivo in imagenes_jpg]
-    
-    #lista_imagenes = imagenes_jpg_bytes
-
-    # Obtenemos la lista de imágenes
-    #ruta_imagenes = settings.MEDIA_EXAM_USUARIOS_ROOT +request.user.username+'/'+identification+'_'+dateNowEcuador()
-    #lista_imagenes = [archivo for archivo in os.listdir(settings.MEDIA_EXAM_USUARIOS_ROOT + request.user.username +'/'+ identification +'_'+ dateNowEcuador()) if archivo.endswith(".jpg")]
-    #print("ruta_imagenes: " + ruta_imagenes)
-    #print("lista_imagenes: " + str(lista_imagenes))
-
-    #-----------------------------
-    # Ruta donde se encuentran las imágenes
-    ruta_imagenes = str(settings.MEDIA_EXAM_USUARIOS_ROOT + request.user.username +'/'+ identification +'_'+ dateNowEcuador())
-    #nombre_pdf = str(identification + '_EXAM_'+ dateNowEcuador()+'.pdf')
-    ruta_pdf = settings.MEDIA_EXAM_USUARIOS_ROOT +request.user.username+'/'+identification+'_'+dateNowEcuador()+'/'+identification+'_EXAM_'+dateNowEcuador()+".pdf"
-    #imagenes = [os.path.join(ruta_imagenes, f) for f in os.listdir(ruta_imagenes) if os.path.isfile(os.path.join(ruta_imagenes, f))]
-    imagenes = [archivo for archivo in os.listdir(settings.MEDIA_EXAM_USUARIOS_ROOT + request.user.username +'/'+ identification +'_'+ dateNowEcuador()) if archivo.endswith(".jpg")]
-    print("imagenes 240: "+str(imagenes))
-    #Remover PDF
-    if os.path.exists(ruta_pdf):
-        os.remove(ruta_pdf)
-
-    # Crear PDF
-    pdf = canvas.Canvas(ruta_pdf, pagesize=A4)
-    titulo = "Resultado de Examenes"
-    pdf.setFont("Courier", 18)
-    pdf.drawString(10, 800, titulo)
-    w, h = A4
-    xlist = [100, 150, 350]
-    ylist = [h - 5, h - 120]
-    pdf.grid(xlist, ylist)
-
-    #pdf.setFillColorRGB(0.14, 0.59, 0.74)
-    #pdf.drawString(60, 750, "Videojuegos")
-    #variables = "UNO","DOS"
-    
-    # Escribir cabecera
-    #pdf.drawString(50, 750, titulo)
-    #pdf.drawString(50, 730, f"Variable 1: {variables[0]}")
-    #pdf.drawString(50, 710, f"Variable 2: {variables[1]}")
-
-    # Agregar imágenes al PDF
-    #for i in range(len(imagenes)):
-    #    if i % 4 == 0:
-    #        pdf.showPage()
-
-        # Calcular coordenadas de la imagen
-    #    j = i % 4
-    #    x = (j % 2) * (A4[1] / 2) + 25
-    #    y = (j // 2) * (A4[0] / 2) + 75
-
-        # Abrir imagen y dibujarla en el PDF
-        #imagen = Image.open(imagenes[i])
-        #pdf.drawImage(ruta_imagenes +'/'+ imagenes[i], x, y, A4[1] / 2, A4[0] / 2)
-    #    pdf.drawImage(ruta_imagenes +'/'+ imagenes[i], x, y, 2.5*inch, 2.5*inch)
-    # Guardar y cerrar el PDF
-    pdf.save()
-    download_pdf(request)
-
-    #-----------------------------
-
-    # Creamos el objeto PDF
-    #nombre_pdf = identification+'_EXAM_'+dateNowEcuador()+".pdf"
-    #print("nombre_pdf: " + nombre_pdf)
-    #pdf = canvas.Canvas(nombre_pdf, pagesize=A4)
-
-    # Definimos los valores de la cabecera
-    #titulo = "Título del documento"
-    #fecha = dateTimeNowEcuador()
-    #variable1 = "Valor de la variable 1"
-    #variable2 = "Valor de la variable 2"
-
-    # Escribimos la cabecera
-    #pdf.setFont("Helvetica-Bold", 16)
-    #pdf.drawCentredString(4.25*inch, 10.5*inch, titulo)
-
-    #pdf.setFont("Helvetica", 12)
-    #pdf.drawString(0.75*inch, 10*inch, "Fecha: " + fecha)
-    #pdf.drawString(5.5*inch, 10*inch, "Variable 1: " + variable1)
-    #pdf.drawString(5.5*inch, 9.75*inch, "Variable 2: " + variable2)
-
-    # Escribimos las imágenes
-    #posicion_x = 3.75
-    #posicion_y = 15.5
-
-    #for i, imagen in enumerate(lista_imagenes):
-    #    if i % 4 == 0 and i != 0:
-    #        pdf.showPage()
-    #        posicion_x = 0.75
-    #        posicion_y = 8.5
-    #    print("ruta_imagenes: " + ruta_imagenes)
-    #    print("imagen: " + imagen)
-    #    ruta_completa_imagen = os.path.join(ruta_imagenes, imagen)
-    #    print("ruta_completa_imagen: " + ruta_completa_imagen)
-    #    pdf.drawImage(ruta_completa_imagen, posicion_x*inch, posicion_y*inch, 2.5*inch, 2.5*inch)
-
-    #    if (i + 1) % 2 == 0:
-    #        posicion_y -= 2.75
-    #        posicion_x = 0.75
-    #    else:
-    #        posicion_x += 2.75
-    
-    # Cerramos el objeto PDF
-    #pdf.save()
-
-    # Añadimos el contenido al PDF existente
-    #ruta_pdf_existente = "ruta/del/pdf/existente.pdf"
-    #ruta_pdf_existente = filename_pdf
-    #print("ruta_pdf_existente: "+ruta_pdf_existente)
-    #pdf_existente = PdfFileReader(open(ruta_pdf_existente, "rb"))
-    #pdf_nuevo = PdfFileReader(open(nombre_pdf, "rb"))
-    #pdf_salida = PdfFileWriter()
-
-    #for i in range(pdf_nuevo.getNumPages()):
-    #    pagina_nueva = pdf_nuevo.getPage(i)
-    #    pagina_existente = pdf_existente.getPage(i)
-    #    pagina_existente.mergePage(pagina_nueva)
-    #    pdf_salida.addPage(pagina_existente)
-
-    #with open(ruta_pdf_existente, "wb") as f:
-    #    pdf_salida.write(f)
-        
-    # Borramos el PDF temporal
-    #os.remove(nombre_pdf)
-
-    #with open(settings.MEDIA_EXAM_USUARIOS_ROOT +request.user.username+'/'+identification+'_'+dateNowEcuador()+'/'+identification+'_EXAM_'+dateNowEcuador()+".pdf", "wb") as documento:
-    #    documento.write(titulo)
-        #print("imagenes_jpg: "+str(imagenes_jpg))
-        #print("imagenes_jpg_bytes: "+str(imagenes_jpg_bytes))
-    #    if imagenes_jpg and imagenes_jpg_bytes:
-    #        documento.write(img2pdf.convert(imagenes_jpg_bytes))
-    #        print("Existen Imagenes")
-    #    else:
-    #        print("No Existen Imagnes disponibles")
-    download_pdf(request)
-    return JsonResponse({'mensaje': 'La función se ejecutó correctamente'})
-
 @transaction.atomic
 def record_diagnostic(request):
     if request.method == 'POST':
@@ -456,64 +576,3 @@ def abrir_pdf(request, exam_id):
     return FileResponse(open(file_path, 'rb'), content_type='application/pdf')
     #return redirect(pdf_url)
 
-# Clase para Reporte.
-class ReportExam01(View):
-
-    @login_required
-    @csrf_exempt
-    def get(request):
-        print("get-ReportExam01")
-        identification = str(request.GET.get('identification'))
-        ##=================##
-        #-----------------------------
-        #Ruta donde se encuentran las imágenes
-        ruta_dir_pdf = str(settings.MEDMEDIA_EXAM_USUARIOS_ROOTIA_URL + request.user.username +'/'+ identification +'_'+ dateNowEcuador()+'/')
-        ruta_imagenes = str(settings.MEDIA_EXAM_USUARIOS_ROOT + request.user.username +'/'+ identification +'_'+ dateNowEcuador()+'/')
-        #nombre_pdf = str(identification + '_EXAM_'+ dateNowEcuador()+'.pdf')
-        #ruta_pdf = settings.MEDIA_EXAM_USUARIOS_ROOT +request.user.username+'/'+identification+'_'+dateNowEcuador()+'/'+identification+'_EXAM_'+dateNowEcuador()+".pdf"
-        #imagenes = [os.path.join(ruta_imagenes, f) for f in os.listdir(ruta_imagenes) if os.path.isfile(os.path.join(ruta_imagenes, f))]
-        imagenes = [archivo for archivo in os.listdir(settings.MEDIA_EXAM_USUARIOS_ROOT + request.user.username +'/'+ identification +'_'+ dateNowEcuador()) if archivo.endswith(".jpg")]
-        grupos = [imagenes[i:i+3] for i in range(0, len(imagenes), 3)]
-        #primeros_seis_imagenes = imagenes[:6]
-        print("grupos 394: "+str(grupos))
-        ##=================##
-        
-        company = Company.objects.get(user_id=request.user.id)
-        examPatient = PatientExam.objects.get(identification=identification,date_exam=dateNowEcuador())
-        #nombreCompany = company.company_name
-        logo = company.logo #settings.STATIC_IMG_URL + 'noLogo.jpg'
-        logo_url = settings.MEDIA_ROOT + str(logo)
-        #print("490 logo: "+str(logo_url))
-        #print("examPatient: " + str(examPatient.diagnostic))
-        #print("identification: " + str(identification))
-        #print("*args: " + str(*args))
-        #print("**kwargs: " + str(**kwargs))
-        data = {
-            'examPatient': examPatient,
-            'diagnostic':examPatient.diagnostic,
-            'logo':logo_url,
-            'company': company,
-            #'imagenes':primeros_seis_imagenes,
-            'grupos':grupos,
-            'ruta':ruta_imagenes
-        }
-        #request_path = request.path
-        #print("request_path")
-        #print(request_path)
-        # Guarda el PDF en la ruta especificada
-        
-        pdf = render_to_pdf('reports/reportExam01.html', data)
-
-        if pdf:
-            nombrePDF = identification+'_'+dateNowEcuador()+'.pdf'
-            ruta_pdf = os.path.join(ruta_dir_pdf, nombrePDF)
-            examPatient.exam_url = ruta_dir_pdf + nombrePDF
-            with open(ruta_pdf, 'wb') as f:
-                f.write(pdf.content)
-            examPatient.save()
-        response = HttpResponse(pdf, content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="'+nombrePDF+'.pdf"'
-        return response
-
-    def guardarPDF(request,pdf):
-        pass

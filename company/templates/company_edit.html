@@ -14,6 +14,17 @@
             <form method="POST" enctype="multipart/form-data">
               <div class="form-row">
                 {% csrf_token %}
+                <div class="form-group col-md-8">
+                  <label>Logo Compañia</label></br>
+                  {% if logo %}
+                    <img src="/media/{{logo}}" name="logo" id="logo" class="form-control" style="width:30%; height:auto;">
+                  {% else %}
+                      <p>No hay imagen cargada</p>
+                  {% endif %}
+                  <div>
+                    <input type="file" name="logo" id="logo" class="form-control">
+                  </div>
+                </div>
                 <div class="form-group col-md-6">
                   <label for="inputUsername">Username</label>
                   {{user_form.username}}
@@ -65,14 +76,11 @@
                   {{company_form.phone}}
                 </div>
               </div>
-              <div class="form-group col-md-10 " >
-                <label>Logo Compañia</label>
-                <img src=" {{company_form.logo.url}}">
-                {{ company_form.logo  }}
-              </div>
+              
+
               <button type="submit" class="btn btn-primary">MODIFICAR</button>
             </form>
-            <img src="/static/media/logos/logo2.png" style="width:30%; height:auto;">
+            <!--<img src="/static/media/logos/logo2.png" style="width:30%; height:auto;">-->
           </div>
         </div>
       <!--</div>-->

@@ -12,7 +12,7 @@
         <div class="text-center"> <!-- Agregar una clase de centrado -->
             <h4>Datos Paciente</h4>
             <div class="container">
-                <form method="POST" action="{% url 'examsSelect' %}">
+                <form method="GET" action="{% url 'examsSelect' %}">
                     {% csrf_token %}
                     <div class="row">
                         <div class="col-md-6 mb-3">                
@@ -43,7 +43,7 @@
             <div class="text-center">
                 <div><h4>VideoStream | <label id="estado"></label></h4></div>
                 <div id="capture" >
-                    <img id="resImg" src="{% static '/images/colornegro.jpg' %}" style="width: 450px; height: 300px;"/>
+                    <img id="resImg" src="{% static '/image/colornegro.jpg' %}" style="width: 450px; height: 300px;"/>
                     <!--<script src="http://apps.bdimg.com/libs/jquery/2.1.1/jquery.min.js"></script>-->
                     <script src="{% static 'js/libs/jquery/2.1.1/jquery.min.js' %}"></script>
                     <script>

@@ -28,6 +28,7 @@ class PatientExam(models.Model):
     company = models.ForeignKey(Company,verbose_name='Empresa',on_delete=models.PROTECT)
     date_exam = models.DateField(blank=True, null=True)
     exam_url = models.CharField(verbose_name='Url-PDF',max_length=5000,blank=True, null=True)
+    diagnostic_general = models.CharField(verbose_name="Diagnostico General", max_length=2500, blank=True, null=True, default="")
     # Log
     create_by = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='patex_create_by', null=True)
     date_creation = models.DateTimeField(auto_now=True,null=True)
@@ -50,7 +51,7 @@ class ExamSample(models.Model):
     sample_url = models.ImageField(blank=True, null=True,verbose_name='Url-Muestra PNG')
     save_date = models.DateField(blank=True, null=True)
     select = models.BooleanField(default=False)
-    diagnostic = models.CharField(verbose_name="Diagnostico", max_length=2500, blank=True, null=True)
+    diagnostic = models.CharField(verbose_name="Diagnostico", max_length=2500, blank=True, null=True, default="")
     # Log
     create_by = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='patexmt_create_by', null=True)
     date_creation = models.DateTimeField(auto_now=True,null=True)

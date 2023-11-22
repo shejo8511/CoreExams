@@ -139,7 +139,10 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 #SOUNDS_ROOT_URL = os.path.join(BASE_DIR,'static/sounds/')
 # Carpeta para Imagenes
 MEDIA_URL = '/media/'
+MEDIA_EXAMS_USUARIOS_URL = '/exams/usuarios/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+PDF_SAVE_ROOT = os.path.join(BASE_DIR,'media/exams/usuarios/')
+EXAMS_SAMPLE_ROOT = os.path.join(BASE_DIR,'media/exams/usuarios/')
 # Directorio donde se guardan las muestras
 MEDIA_EXAM_USUARIOS_ROOT = os.path.join(BASE_DIR, 'media/exams/usuarios/')
 #MEDIA_ROOT_SOUNDS = os.path.join(BASE_DIR, 'static/sounds/')

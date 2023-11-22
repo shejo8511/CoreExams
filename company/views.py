@@ -56,12 +56,14 @@ def listExams(request):
 def company_edit(request, company_id):
     try:
         company = Company.objects.filter(id=company_id).first()
+        print(" company.logo: " + str(company.logo))
         if company:
             user = User.objects.filter(id=company.user_id).first()
         
         if request.method == 'POST':
             print("POST")
             company_form = CompanyForm(request.POST,request.FILES, instance=company)
+            
             user_form = CustomUserChangeForm(request.POST, instance=user)
             if company_form.is_valid() and user_form.is_valid():
                 company_form.save()
@@ -71,14 +73,15 @@ def company_edit(request, company_id):
         else:
             company_form = CompanyForm(instance=company)
             user_form = CustomUserChangeForm(instance=user)
-
+            
         context = {
             'company': company,
+            'logo': company.logo,
             'company_form': company_form,
             'user_form': user_form,
             #'logos':settings.LOGOS,
         }
-        print("company_form: "+str(company_form))
+        #print("company_form: "+str(company_form))
         return render(request,'company_edit.html',context)
         #return render(request, 'register.html', {'user_form': user_form, 'company_form': company_form})
     except Exception as e:

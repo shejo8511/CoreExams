@@ -70,40 +70,86 @@
                 <input id="idExam" name="idExam" value="{{ idExam }}" type="hidden" class="form-control" >
             </div>
         </div>
-        <div class="container-fluid row">
+        <div class="container-fluid row" style="margin: 20px;">
             <div class="col-12 align-self-start">
                 <div class="text-center">
-                    <h4>Images Capturadas</h4>
+                    {% if listSamplesExam %}
+                        <h4>Images Capturadas</h4>
+                    {% else %}
+                        <h4>No existen muestras capturadas</h4>
+                    {% endif %}
                 </div>
             </div>
-            <div id="detalleseleccion" name="detalleseleccion" style="overflow-x: hidden; overflow-y: scroll; width: 150%; border: 1px solid">
-                
-                {% for objeto in listSamplesExam %}
-                
-                    <div class="col-md-4">
-                        <img id="image" src="{{ objeto.sample_url.url }}" alt="{{ objeto.name }}" style="width: 150px; height: 100px;">
-                        <input id="select" type="checkbox" value="{{ objeto.select }}" />
-                        <input id="diagnostic" type="text" value="{{ objeto.diagnostic }}" />
-                    </div>  
-                    
-                {% endfor %}
-            </div>
+            <div name="detailselection" >
+                <form method="POST" action="{% url 'examsSelect' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="listSamplesExam" id="listSamplesExamData" value="{{ listSamplesExam }}">
+                    <input id="idExam" name="idExam" value="{{ idExam }}" type="hidden" class="form-control" >
+                    <div class="row">
+                        {% for objeto in listSamplesExam %}
+                            <div class="col-md-6">
+                                <div class="card mb-4" >
+                                    <img class="card-img-top" src="{{ objeto.sample_url.url }}" alt="{{ objeto.name }}" style="width: 100%; height: auto;">
+                                    <div class="card-body">
+                                        {% if objeto.select %}
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" checked="checked" value="{{objeto.id}},{{objeto.select}}" name="select">
+                                                <label class="form-check-label">Seleccionar Muestra</label> 
+                                            </div>
+                                        {% else %}
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="{{objeto.id}},{{objeto.select}}" name="select">
+                                                <label class="form-check-label">Seleccionar Muestra</label>
+                                            </div>
+                                        {% endif %}
+                                        <textarea name="diagnostic" class="form-control mt-2" rows="2" placeholder="Diagnóstico">{% if objeto.diagnostic is not None %}{{objeto.diagnostic}}{% endif %}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            {% if forloop.counter|divisibleby:2 %}
+                                </div><div class="row">
+                            {% endif %}
+                        {% endfor %}
+                        
+                    </div>
+                    <div>
+                        <textarea name="diagnostic_general" type="text" class="form-control" placeholder="Escriba aqui el Diagnostico General" required>{{ diagnostic_general }}</textarea>
+                    </div>
+                    </br>
+                    <div class="mb-6 d-grid text-right">
+                        <button type="submit" class="btn btn-primary btn-lg text-uppercase fw-bold">GENERAR REPORTE</button>
+                    </div>
+                </form>
         </div>
-        <button type="button" onclick="document.dispatchEvent(new Event('saveSelect'));">Guardar</button>
     </div>
 </div>
-<script>
-    var detalleseleccion = document.getElementById("detalleseleccion");
-     // Capturar pantalla al presionar la tecla "c"
-     document.addEventListener('saveSelect', function(event) {
-        console.log("dentro saveSelect");
-        var formData = new FormData();
-        formData.append('detalleseleccion', JSON.stringify(detalleseleccion.serialize()));
-
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', '/exam/guardar-select-diagnostic/');
-        xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}');
-        xhr.send(formData);
-     })
-</script>
+<script type="text/javascript">
+    function toggleTextarea(checkbox, textarea) {
+      if (checkbox.checked) {
+        textarea.removeAttribute('disabled');
+      } else {
+        textarea.setAttribute('disabled', 'disabled');
+        textarea.value = '';
+      }
+    }
+  
+    const checkboxes = document.querySelectorAll('input[name="select"]');
+    const textareas = document.querySelectorAll('textarea[name="diagnostic"]');
+  
+    for (let i = 0; i < checkboxes.length; i++) {
+      const checkbox = checkboxes[i];
+      const textarea = textareas[i];
+  
+      checkbox.addEventListener('click', () => {
+        toggleTextarea(checkbox, textarea);
+      });
+  
+      if (checkbox.checked) {
+        textarea.removeAttribute('disabled');
+      } else {
+        textarea.setAttribute('disabled', 'disabled');
+      }
+    }
+  </script>
+  
 {% endblock %}

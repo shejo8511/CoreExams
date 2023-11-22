@@ -45,7 +45,7 @@ class Company(models.Model):
     registration_date = models.DateTimeField(verbose_name='Fecha de registro',auto_now=True)
     pay_date = models.DateTimeField(verbose_name='Fecha de Pago',blank=True, null=True)
     court_date = models.DateTimeField(verbose_name='Fecha de Corte',blank=True, null=True)
-    logo = models.ImageField(blank=True, null=True)
+    logo = models.ImageField(upload_to="logos/",blank=True, null=True)
     #logo = models.CharField(upload_to='logos/',null=True)
     #user = models.ForeignKey(User,verbose_name='Usuario - Empresa',on_delete=models.CASCADE)
     membership = models.ForeignKey(Membership, verbose_name="Membresia", on_delete=models.PROTECT, related_name='Membresia')

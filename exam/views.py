@@ -13,7 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 from django.core.paginator import Paginator, Page
 #import playsound
-import simpleaudio as sa
+#import simpleaudio as sa
 from datetime import date, datetime
 import datetime as dt_datetime
 from .models import TypeExam

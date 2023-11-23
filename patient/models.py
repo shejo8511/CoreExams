@@ -6,7 +6,7 @@ from django.conf import settings
 # Entidad Ficha Pasiente Examen
 class Patient(models.Model):
     full_name = models.CharField(verbose_name='Nombres',max_length=100)
-    identification = models.CharField(verbose_name='Identificacion',max_length=10,unique=True)
+    identification = models.CharField(verbose_name='Identificacion',max_length=10)
     company = models.ForeignKey(Company,verbose_name='Empresa',on_delete=models.PROTECT)
     birthday = models.DateField(blank=True, null=True)
     age = models.IntegerField(blank=True, null=True)

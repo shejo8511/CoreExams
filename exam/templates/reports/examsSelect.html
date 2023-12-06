@@ -112,12 +112,22 @@
                         {% endfor %}
                         
                     </div>
-                    <div>
-                        <textarea name="diagnostic_general" type="text" class="form-control" placeholder="Escriba aqui el Diagnostico General" required>{{ diagnostic_general }}</textarea>
-                    </div>
-                    </br>
+                    {% if listSamplesExam %}
+                        <div>
+                            <textarea name="diagnostic_general" type="text" class="form-control" placeholder="Escriba aqui el Diagnostico General" required>{{ diagnostic_general }}</textarea>
+                        </div>
+                        </br>
+                        <div class="mb-6 d-grid text-right">
+                            <button type="submit" class="btn btn-primary btn-lg text-uppercase fw-bold">Reporte</button>
+                            <button class="btn btn-primary btn-lg text-uppercase fw-bold" formaction="{% url 'cancel' %}">Cancelar</button>
+                        </div>
+                    {% else %}
+                        <div class="mb-6 d-grid text-right">
+                            <button class="btn btn-primary btn-lg text-uppercase fw-bold" formaction="{% url 'cancel' %}">Cancelar</button>
+                        </div>
+                    {% endif %}
                     <div class="mb-6 d-grid text-right">
-                        <button type="submit" class="btn btn-primary btn-lg text-uppercase fw-bold">GENERAR REPORTE</button>
+                        
                     </div>
                 </form>
         </div>

@@ -95,11 +95,6 @@ def consultPatientObj(id):
     return objPatient
 
 @login_required
-@csrf_exempt
-def cancel(request):
-    return redirect("home")
-
-@login_required
 def listTypeExam(request):
     company = Company.objects.filter(user_id=request.user.id).first()
     if company:
@@ -153,20 +148,31 @@ def guardar_captura(request):
             captura_pantalla = request.POST.get('capture')
             # Decodifica la captura de pantalla desde Base64
             imagen_decodificada = base64.b64decode(captura_pantalla.split(',')[1])
+            sigNum = 0
+            if ExamSample.objects.filter(patientexam_id=idExam):
+                print("Si Existen")
+                num = ExamSample.objects.filter(patientexam_id=idExam).count()
+                sigNum = num + 1
+                print("line 170: sigNum: "+str(sigNum))
+            else:
+                sigNum = 1
+                print("Inicio-line 173: sigNum: "+str(sigNum))
             # Guarda la captura de pantalla en el sistema de archivos
             folder = os.path.join(settings.MEDIA_EXAM_USUARIOS_ROOT + request.user.username + '/' + idExam + '_' + identification + '_'+ typeExam +'_' + dateNowEcuador())
             url = settings.MEDIA_EXAMS_USUARIOS_URL + request.user.username + '/' + idExam + '_' + identification + '_' + typeExam + '_' + dateNowEcuador()
             print("folder: "+str(folder))
             print("url: "+str(url))
+            
             if not os.path.exists(folder):
                 os.makedirs(folder)
             else:
-                with open(os.path.join(folder, identification +'_'+ typeExam +'_'+ dateTimeNowEcuador() +'.jpg'), 'wb') as f:
+                with open(os.path.join(folder, str(sigNum) +'_'+ idExam +'_'+identification +'_'+ typeExam +'_'+ dateNowEcuador() +'.jpg'), 'wb') as f:
                     if f.write(imagen_decodificada):
-                        name = idExam + '_' + identification + '_'+ typeExam +'_' + dateNowEcuador()
+                        #Nombre de la Imagen
+                        name = str(sigNum) + '_' + idExam + '_' + identification + '_'+ typeExam +'_' + dateNowEcuador() + '.jpg' 
                         idPatient = consultPatient(identification,company_user.id)
                         idTypeExam = consultTypeExamName(typeExam)
-                        sample_url = url +'/'+ identification +'_'+ typeExam +'_'+ dateTimeNowEcuador() +'.jpg'
+                        sample_url = url +'/' + str(sigNum) + '_' + idExam + '_' + identification +'_'+ typeExam +'_'+ dateNowEcuador() +'.jpg'
                         ResExamSample = savePatientImg(name,idPatient,idTypeExam,idExam,company_user.id,url,sample_url,request.user.id)
                         if not ResExamSample:
                             return render(request, 'stream/videoStream.html', {'message' : e,'company':company_user})
@@ -221,7 +227,8 @@ def videoStream(request):
                         'birthday':birthday,
                         'full_name':full_name,
                         'typeExam':consultTypeExam(typeExam),
-                        'idExam':patientExam}
+                        'idExam':patientExam,
+                        'username':company_user}
                 return render(request, 'stream/videoStream.html',context)
         if request.method == 'GET':
             print("linea 208: videoStream")
@@ -317,11 +324,13 @@ class ReportExam01(View):
         ruta_imagenes = ExamSample.objects.filter(patientexam_id=idExam).first()
         examPatient = PatientExam.objects.filter(id=idExam).first()
         patient = Patient.objects.filter(id=examPatient.patient_id).first()
+        patientExam = PatientExam.objects.filter(id=idExam).first()
         #Ruta donde se encuentran las imágenes
-        print("line 335 - examPatient.type_exam: " +str(examPatient.type_exam))
+        #print("line 322 - examPatient.type_exam: " +str(examPatient.type_exam))
         ruta_dir_pdf = str(settings.EXAMS_SAMPLE_ROOT + username +'/'+ idExam + '_' + patient.identification + '_' + str(examPatient.type_exam) +'_'+ dateNowEcuador()+'/')
-        ruta_imagenes = str(settings.EXAMS_SAMPLE_ROOT + username +'/'+ idExam + '_' + patient.identification + '_' + str(examPatient.type_exam) +'_'+ dateNowEcuador()+'/')
-        ruta_img = str('media/exams/usuario/'+ username + '/' + idExam + '_' + patient.identification + '_' + str(examPatient.type_exam) +'_'+ dateNowEcuador()+'/')
+        rutaImg = str(settings.EXAMS_SAMPLE_ROOT + username +'/'+ idExam + '_' + patient.identification + '_' + str(examPatient.type_exam) +'_'+ dateNowEcuador()+'/')
+        #rutaImg = str('media/exams/usuario/'+ username + '/' + idExam + '_' + patient.identification + '_' + str(examPatient.type_exam) +'_'+ dateNowEcuador()+'/')
+        print("linea 327: rutaImg: "+str(rutaImg))
         #nombre_pdf = str(identification + '_EXAM_'+ dateNowEcuador()+'.pdf')
         #ruta_pdf = settings.MEDIA_EXAM_USUARIOS_ROOT +request.user.username+'/'+identification+'_'+dateNowEcuador()+'/'+identification+'_EXAM_'+dateNowEcuador()+".pdf"
         #imagenes = [os.path.join(ruta_imagenes, f) for f in os.listdir(ruta_imagenes) if os.path.isfile(os.path.join(ruta_imagenes, f))]
@@ -333,42 +342,42 @@ class ReportExam01(View):
         # Consulta que extrae un objeto específico
         # Consulta que devuelve un objeto con los valores de los campos especificados
         sample_exam = ExamSample.objects.filter(patientexam=idExam, select=1).all()
-        #print("line 330 - sample_exam: " + str(sample_exam))
-        for sample in sample_exam:
-            print("line 333 - id: "+ str(sample.id))
-            print("line 334 - sample_url: "+ str(sample.sample_url))
-            print("line 335 - diagnostic: "+ str(sample.diagnostic))
+        #print("line 337 - sample_exam: " + str(sample_exam))
+        #for sample in sample_exam:
+        #    print("line 333 - id: "+ str(sample.id))
+        #    print("line 334 - sample_url: "+ str(sample.sample_url))
+        #    print("line 335 - diagnostic: "+ str(sample.diagnostic))
             #objExamPatient = ExamSample.objects.get(id=img.id)
             #imagenes.append(objExamPatient.sample_url)
             #diagnostic.append(objExamPatient.diagnostic)
 
 
-        grupos = [imagenes[i:i+3] for i in range(0, len(imagenes), 3)]
-        grupos_dig = [diagnostic[i:i+3] for i in range(0, len(diagnostic), 3)]
+        #grupos = [imagenes[i:i+3] for i in range(0, len(imagenes), 3)]
+        #grupos_dig = [diagnostic[i:i+3] for i in range(0, len(diagnostic), 3)]
         #primeros_seis_imagenes = imagenes[:6]
-        print("grupos 339: "+str(grupos))
-        print("grupos_dig 340: "+str(grupos_dig))
+        #print("grupos 350: "+str(grupos))
+        #print("grupos_dig 351: "+str(grupos_dig))
         ##=================##
         company = Company.objects.get(user_id=iduser)
         #patient = PatientExam.objects.get(identification=examPatient.identification,date_exam=dateNowEcuador())
         #nombreCompany = company.company_name
         logo = company.logo #settings.STATIC_IMG_URL + 'noLogo.jpg'
-        print("339 logo: "+str(logo))
-        logo_url = settings.MEDIA_ROOT +'/' + str(logo)
-        print("341 logo_url: "+str(logo_url))
+        #print("357 logo: "+str(logo))
+        logoUrl = settings.MEDIA_ROOT +'/' + str(logo)
+        print("360 logoUrl: "+str(logoUrl))
         #print("identification: " + str(identification))
         #print("*args: " + str(*args))
-        #print("**kwargs: " + str(**kwargs))
+        
         data = {
             'patient': patient,
-            #'diagnostic':examPatient.diagnostic,
-            'logo':logo_url,
+            'patientExam':patientExam,
+            'logo':logoUrl,
             'company': company,
             #'imagenes':primeros_seis_imagenes,
-            'grupos':grupos,
-            'grupos_dig':grupos_dig,
+            #'grupos':grupos,
+            #'grupos_dig':grupos_dig,
             'sample_exam':sample_exam,
-            'ruta':ruta_img
+            'rutaImg':rutaImg
         }
         #request_path = request.path
         print("line 375")
@@ -404,6 +413,7 @@ def examsSelect(request):
         diagnostic_list = []
         select_list = []
         if request.method == 'POST':
+
             idExam = request.POST.get('idExam')
             diagnostic_general = request.POST.get('diagnostic_general')
             print("POST - line: 409: "+str(idExam))
@@ -413,6 +423,31 @@ def examsSelect(request):
             select_value = request.POST.getlist('select')
             #print("select_value - linea 239: " + str(select_value))
             
+            #Valida si es mayor a 9 imagenes seleccionadas
+            if len(select_list) > 9:
+                print("select_list: " + str(select_list))
+                print("No puede seleccionar más de 9 elementos")
+                message = "No puede seleccionar más de 9 elementos"
+                print("linea 419: GET examsSelect")
+                idExam = request.POST.get('idExam')
+                print("linea 421: GET idExam: " + str(idExam))
+                objExamPatient = PatientExam.objects.filter(id=idExam,company=company_user.id).values()
+                objPatient = consultPatientObj(objExamPatient[0]['patient_id'])
+                listSamplesExam = ExamSample.objects.filter(patientexam_id=idExam)
+                birthday = objPatient[0]['birthday'].strftime('%Y-%m-%d')
+                diagnostic_general = objExamPatient[0]['diagnostic_general']
+                context = { 'company':company_user,
+                            'identification':objPatient[0]['identification'],
+                            'birthday':birthday,
+                            'full_name':objPatient[0]['full_name'],
+                            'typeExam':consultTypeExam(objExamPatient[0]['type_exam_id']),
+                            'idExam':idExam,
+                            'listSamplesExam':listSamplesExam,
+                            'diagnostic_general': diagnostic_general,
+                            'message' : message,
+                }
+                return render(request, 'reports/examsSelect.html', context)
+
             # Create List for Select
             for row in select_value:
                 id_object, select = row.split(',')
@@ -576,3 +611,7 @@ def abrir_pdf(request, exam_id):
     return FileResponse(open(file_path, 'rb'), content_type='application/pdf')
     #return redirect(pdf_url)
 
+@login_required
+@csrf_exempt
+def cancel(request):
+    return redirect('home')

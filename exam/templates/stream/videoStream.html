@@ -47,11 +47,12 @@
                     <!--<script src="http://apps.bdimg.com/libs/jquery/2.1.1/jquery.min.js"></script>-->
                     <script src="{% static 'js/libs/jquery/2.1.1/jquery.min.js' %}"></script>
                     <script>
+                        const username = "{{ username }}";
                         const ws = new WebSocket(
                             'ws://'
                             + window.location.host
                             + '/ws/exam/stream/videoStream/'
-                            + 'wms'
+                            + username
                             + '/'
                         );
                         console.log(ws);

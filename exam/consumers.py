@@ -4,7 +4,9 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 class VideoConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['v_name']
+        print('self.room_name: '+str(self.room_name))
         self.room_group_name = f'video_{self.room_name}'
+        print('self.room_group_name: '+str(self.room_group_name))
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name

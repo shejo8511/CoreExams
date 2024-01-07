@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% if message %}
+    <div id="alert-message" class="alert alert-warning" role="alert">
+        {{ message }}
+    </div>
+{% endif %}
+
+<div class="container">
+    <div class="card border-2 shadow rounded-3 my-5">
+        <div class="card-body p-4 p-sm-5">
+            <form method="GET" action="{% url 'province' %}">
+                <div class="d-grid text-right mb-2">
+                    <button type="submit" class="btn btn-primary">Crear</button>
+                </div>
+            </form>
+            <div class="row">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">Pais</th>
+                            <th scope="col">Provincia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if page_objects %}
+                            {% for country in page_objects %}
+                            <tr>
+                                <td>{{ country.country.name }}</td>
+                                <td>{{ country.name }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <td colspan="5"><p>No existen datos que mostrar</p></td>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="row">
+                <div class="col">
+                    {% if page.has_previous %}
+                        <a class="btn btn-primary" href="?page={{ page.previous_page_number }}">Anterior</a>
+                    {% endif %}
+                </div>
+                <div class="col text-center">
+                    Página {{ page.number }} de {{ page.paginator.num_pages }}
+                </div>
+                <div class="col text-right">
+                    {% if page.has_next %}
+                        <a class="btn btn-primary" href="?page={{ page.next_page_number }}">Siguiente</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

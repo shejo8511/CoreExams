@@ -3,6 +3,7 @@ from os import path
 import pytz
 import base64
 import json
+from PIL import Image
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseServerError, FileResponse
 from django.shortcuts import render, redirect
@@ -306,12 +307,22 @@ def videoStream(request):
         return render(request, 'reports/examsSelect.html', {'message' : e,'company':company_user})
 
 #Renderiza el HTML para Crear el PDF
-def render_to_pdf(template_src, context_dict={}):
+def render_to_pdf(template_src,iduser, context_dict={}):
+    ##Imagen de Marca de AGUA
+    #company_user = Company.objects.filter(user_id=request.user.id).first()
+    company = Company.objects.get(user_id=iduser)
+    logo = company.logo #settings.STATIC_IMG_URL + 'noLogo.jpg'
+    logoUrl = settings.MEDIA_ROOT +'/' + str(logo)
+    print("314 logoUrl-renderToPDF: "+str(logoUrl))
+    
+
     template = get_template(template_src)
     html  = template.render(context_dict)
     result = BytesIO()
     pdf = pisa.pisaDocument(BytesIO(html.encode("utf-8")), result,encoding='utf-8')
     if not pdf.err:
+        image = Image.open(logoUrl)
+        #pdf.add_watermark(image=image,position='center',opacity=0.5)
         return HttpResponse(result.getvalue(), content_type='application/pdf')
     return None
 
@@ -380,11 +391,10 @@ class ReportExam01(View):
             'rutaImg':rutaImg
         }
         #request_path = request.path
-        print("line 375")
         #print(request_path)
         # Guarda el PDF en la ruta especificada
-        
-        pdf = render_to_pdf('reports/reportExam01.html', data)
+        print("line 375: "+str(iduser))
+        pdf = render_to_pdf('reports/reportExam01.html', iduser, data)
         print("line 375" + str(pdf))
         if pdf:
             print("line 382")
@@ -416,16 +426,16 @@ def examsSelect(request):
 
             idExam = request.POST.get('idExam')
             diagnostic_general = request.POST.get('diagnostic_general')
-            print("POST - line: 409: "+str(idExam))
-            print("POST - linea 410: ")
-            print("POST - linea 411: "+str(diagnostic_general))
+            print("POST - line: 429: "+str(idExam))
+            print("POST - linea 430: ")
+            print("POST - linea 431: "+str(diagnostic_general))
             #listSamplesExam = request.POST.getlist('listSamplesExam')
             select_value = request.POST.getlist('select')
-            #print("select_value - linea 239: " + str(select_value))
+            print("select_value - linea 434: " + str(select_value))
             
             #Valida si es mayor a 9 imagenes seleccionadas
-            if len(select_list) > 9:
-                print("select_list: " + str(select_list))
+            """if len(select_list) > 9:
+                print("select_list line 438: " + str(select_list))
                 print("No puede seleccionar más de 9 elementos")
                 message = "No puede seleccionar más de 9 elementos"
                 print("linea 419: GET examsSelect")
@@ -446,7 +456,7 @@ def examsSelect(request):
                             'diagnostic_general': diagnostic_general,
                             'message' : message,
                 }
-                return render(request, 'reports/examsSelect.html', context)
+                return render(request, 'reports/examsSelect.html', context)"""
 
             # Create List for Select
             for row in select_value:

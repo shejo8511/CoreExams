@@ -6,52 +6,64 @@
         {{ message }}
     </div>
 {% endif %}
-<h3 class="text-center">Listado de Examenes Por Pacientes </h3></br>
-<h4 class="text-center"> Empresa: {{company.company_name}} </h4>
+<!--<h4 class="text-center" > {{company.company_name}} </h4>-->
 <div class="container">
-    <div class="row">
-        <table class="table table-striped">
-            <thead>
-            <tr>
-                <th scope="col">Identificacion</th>
-                <th scope="col">Nombre Completo</th>
-                <th scope="col">Edad</th>
-                <th scope="col">Fecha Examen</th>
-                <th scope="col">Tipo Examen</th>
-                <th scope="col">Examen</th>
-            </tr>
-            </thead>
-            <tbody>
-                {% for objeto in listPatientExam %}
-                <tr>
-                    <td id="identification">{{ objeto.patient.identification }}</td>
-                    <td>{{ objeto.patient.full_name }}</td>
-                    <td>{{ objeto.patient.age }}</td>
-                    <td id="date_exam">{{ objeto.date_exam }}</td>
-                    <td>{{ objeto.type_exam.name }}</td>
-                    {% if objeto.exam_url %}
-                        <td><a href="{% url 'abrir_pdf' objeto.id %}" target="_blank">Abrir PDF</a></td>
-                    {% else %}
-                        <td>N/A</td>
-                    {% endif %}
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    <div class="row">
-        <div class="col">
-            {% if page.has_previous %}
-                <a href="?page={{ page.previous_page_number }}">Anterior</a>
-            {% endif %}
-        </div>
-        <div class="col text-center">
-            Página {{ page.number }} de {{ page.paginator.num_pages }}
-        </div>
-        <div class="col text-right">
-            {% if page.has_next %}
-                <a href="?page={{ page.next_page_number }}">Siguiente</a>
-            {% endif %}
+    <div class="card border-2 shadow rounded-3 my-5">
+        <div class="card-body p-4 p-sm-5">
+            <h4 class="text-center" >Examenes de Pacientes </h4></br>
+            <div class="row">
+                <form id="search-form">
+                    <div class="input-group mb-2">
+                        <input type="text" class="form-control" name="search_term" placeholder="Cédula/Nombre/Apellido" style="max-width: 80%;">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" type="submit">Buscar</button> 
+                            <!--<button class="btn btn-info" type="submit">Refrescar</button>-->
+                        </div>
+                    </div>
+                </form>
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th scope="col">Identificacion</th>
+                        <th scope="col">Nombre Completo</th>
+                        <th scope="col">Edad</th>
+                        <th scope="col">Fecha Examen</th>
+                        <th scope="col">Tipo Examen</th>
+                        <th scope="col">Examen</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        {% for objeto in listPatientExam %}
+                        <tr>
+                            <td id="identification">{{ objeto.patient.identification }}</td>
+                            <td>{{ objeto.patient.full_name }}</td>
+                            <td>{{ objeto.patient.age }}</td>
+                            <td id="date_exam">{{ objeto.date_exam }}</td>
+                            <td>{{ objeto.type_exam.name }}</td>
+                            {% if objeto.exam_url %}
+                                <td><a href="{% url 'abrir_pdf' objeto.id %}" target="_blank">Abrir PDF</a></td>
+                            {% else %}
+                                <td>N/A</td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="row">
+            <div class="col">
+                {% if page.has_previous %}
+                    <a class="btn btn-primary" href="?page={{ page.previous_page_number }}">Anterior</a>
+                {% endif %}
+            </div>
+            <div class="col text-center">
+                Página {{ page.number }} de {{ page.paginator.num_pages }}
+            </div>
+            <div class="col text-right">
+                {% if page.has_next %}
+                    <a class="btn btn-primary" href="?page={{ page.next_page_number }}">Siguiente</a>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>

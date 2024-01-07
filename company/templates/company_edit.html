@@ -6,6 +6,118 @@
         {{ message }}
     </div>
   {% endif %}
+  <script>
+    window.onload = function(){
+    
+      let selectorCountry = document.querySelector("#country");
+      selectorCountry.addEventListener('change',function(){
+
+          let country = selectorCountry.value;
+          if(country == "no_country"){
+              removeChilds(document.getElementById('province'));
+          }
+          else{
+              ajax_request_province(country);
+          }
+      });
+
+      function ajax_request_province(country_id){
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status == 200) {
+            console.log(this.responseText);
+            res = JSON.parse(this.responseText)
+            provinces = res.province;
+            removeChilds(document.getElementById('province'));
+            removeChilds(document.getElementById('city'));
+            if (provinces.length > 0) { // Si la lista de provincias no está vacía
+              add_option_province('0', 'Seleccione la provincia');
+              add_option_city('0', 'Seleccione la ciudad');
+              for (const province of provinces) {
+                  add_option_province(province.id, province.name);
+              }
+            } else { // Si la lista de provincias está vacía
+              add_option_province('0', 'Seleccione la provincia'); // Agrega la opción predeterminada
+              add_option_city('0', 'Seleccione la ciudad'); // Agrega la opción predeterminada
+            }
+          }
+        };
+        xhttp.open("GET", `ajax_provinces/${country_id}`, true);
+        xhttp.send();
+      }
+      
+      function add_option_province(val,text){
+        var sel = document.getElementById('province');
+            
+        // create new option element
+        var opt = document.createElement('option');
+
+        // create text node to add to option element (opt)
+        opt.appendChild( document.createTextNode(text) );
+
+        // set value property of opt
+        opt.value = val; 
+
+        // add opt to end of select box (sel)
+        sel.appendChild(opt); 
+      }
+
+
+      let selectorProvince = document.querySelector("#province");
+      selectorProvince.addEventListener('change',function(){
+
+          let province = selectorProvince.value;
+          if(province == "no_province"){
+              removeChilds(document.getElementById('city'));
+          }
+          else{
+              ajax_request_city(province);
+          }
+      });
+
+      function ajax_request_city(province_id){
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status == 200) {
+            res = JSON.parse(this.responseText)
+            citys = res.city;
+            removeChilds(document.getElementById('city'));
+            if (citys.length > 0) { // Si la lista de provincias no está vacía
+              add_option_city('0', 'Seleccione la ciudad');
+              for (const city of citys) {
+                  add_option_city(city.id, city.name);
+              }
+            } else { // Si la lista de provincias está vacía
+              add_option_city('0', 'Seleccione la ciudad'); // Agrega la opción predeterminada
+            }
+          }
+        };
+        xhttp.open("GET", `ajax_citys/${province_id}`, true);
+        xhttp.send();
+      }
+
+      function add_option_city(val,text){
+        var sel = document.getElementById('city');
+          
+        // create new option element
+        var opt = document.createElement('option');
+
+        // create text node to add to option element (opt)
+        opt.appendChild( document.createTextNode(text) );
+
+        // set value property of opt
+        opt.value = val; 
+
+        // add opt to end of select box (sel)
+        sel.appendChild(opt); 
+      }
+
+    }
+    var removeChilds = function (node) {
+        var last;
+        while (last = node.lastChild) node.removeChild(last);
+    };
+  </script>
   <div class="container">
     <div class="row">
       <!--<div class="col-sm-9 col-md-7 col-lg-12 mx-auto">-->
@@ -67,6 +179,35 @@
                 </div>
               </div>
               <div class="form-row">
+                <div class="form-group col-md-4">
+                  <label for="country_select">Pais</label>
+                  <select name="country" id='country' class="form-control" >
+                    <option value="no_country">Seleccione el Pais</option>
+                    {% for country in country_list %}
+                      <option value="{{country.pk}}" {% if country.pk == country_id %}selected{% endif %}>{{country.name}}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="form-group col-md-4">
+                  <label for="province_select">Provincia</label>
+                  <select name="province" id='province' class="form-control" >
+                    <option value="0">Seleccione la Provincia</option>
+                    {% for p in province %}
+                      <option value="{{p.pk}}" {% if p.pk == p_id %}selected{% endif %}>{{p.name}}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="form-group col-md-4">
+                  <label for="city_select">Ciudad</label>
+                  <select name="city" id='city' class="form-control" >
+                    <option value="no_city">Seleccione la Ciudad</option>
+                    {% for c in city %}
+                      <option value="{{c.id}}" {% if c.pk == c_id %}selected{% endif %}>{{c.name}}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-row">
                 <div class="form-group col-md-8">
                   <label for="inputAddress">Direccion</label>
                   {{company_form.address}}
@@ -76,8 +217,6 @@
                   {{company_form.phone}}
                 </div>
               </div>
-              
-
               <button type="submit" class="btn btn-primary">MODIFICAR</button>
             </form>
             <!--<img src="/static/media/logos/logo2.png" style="width:30%; height:auto;">-->
@@ -86,4 +225,5 @@
       <!--</div>-->
     </div>
   </div>
+  
 {% endblock %}

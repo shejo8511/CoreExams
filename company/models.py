@@ -24,6 +24,72 @@ class Membership(models.Model):
     def __str__(self):
         return self.name 
 
+#Entidad Pais
+class Country(models.Model):
+
+    name = models.CharField(verbose_name='Nombre Pais',max_length=50,unique=True)
+    # Log
+    create_by = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='coun_create_by', null=True)
+    date_creation = models.DateTimeField(auto_now=True,null=True)
+    update_by = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='coun_update_by', null=True)
+    date_updated = models.DateTimeField(auto_now_add=True,null=True)
+    enabled = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = 'Pais'
+        verbose_name_plural = 'Paises'
+        ordering = ('name',)
+    
+    def __str__(self):
+        return self.name
+
+#Entidad Provincia
+class Province(models.Model):
+
+    name = models.CharField(verbose_name='Nombre Provincia',max_length=50)
+    country = models.ForeignKey(Country, verbose_name="Pais", on_delete=models.PROTECT, related_name='Pais_Provincia')
+    # Log
+    create_by = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='prov_create_by', null=True)
+    date_creation = models.DateTimeField(auto_now=True,null=True)
+    update_by = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='prov_update_by', null=True)
+    date_updated = models.DateTimeField(auto_now_add=True,null=True)
+    enabled = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = 'Provincia'
+        verbose_name_plural = 'Provincias'
+        ordering = ('name',)
+        constraints = [
+            models.UniqueConstraint(fields=['country', 'name'], name='unique_country_province')
+        ]
+    
+    def __str__(self):
+        return self.name
+
+#Entidad Ciudad
+class City(models.Model):
+
+    name = models.CharField(verbose_name='Nombre Ciudad',max_length=50)
+    country = models.ForeignKey(Country, verbose_name="Pais", on_delete=models.PROTECT, related_name='Pais_Ciudad')
+    province = models.ForeignKey(Province, verbose_name="Provincia", on_delete=models.PROTECT, related_name='Provincia_Ciudad')
+    # Log
+    create_by = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='city_create_by', null=True)
+    date_creation = models.DateTimeField(auto_now=True,null=True)
+    update_by = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='city_update_by', null=True)
+    date_updated = models.DateTimeField(auto_now_add=True,null=True)
+    enabled = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = 'Ciudad'
+        verbose_name_plural = 'Ciudades'
+        ordering = ('name',)
+        constraints = [
+            models.UniqueConstraint(fields=['country', 'province', 'name'], name='unique_country_province_ciudad')
+        ]
+    
+    def __str__(self):
+        return self.name
+
 #Entidad Compania
 class Company(models.Model):
 
@@ -48,6 +114,9 @@ class Company(models.Model):
     logo = models.ImageField(upload_to="logos/",blank=True, null=True)
     #logo = models.CharField(upload_to='logos/',null=True)
     #user = models.ForeignKey(User,verbose_name='Usuario - Empresa',on_delete=models.CASCADE)
+    country = models.ForeignKey(Country, verbose_name="Pais", on_delete=models.PROTECT, related_name='Pais')
+    province = models.ForeignKey(Province, verbose_name="Provincia", on_delete=models.PROTECT, related_name='Provincia')
+    city = models.ForeignKey(City, verbose_name="Ciudad", on_delete=models.PROTECT, related_name='Ciudad')
     membership = models.ForeignKey(Membership, verbose_name="Membresia", on_delete=models.PROTECT, related_name='Membresia')
     user = models.OneToOneField(User, verbose_name='Usuario - Empresa', on_delete=models.PROTECT, related_name='Empresa')
     # Log
@@ -64,4 +133,3 @@ class Company(models.Model):
     
     def __str__(self):
         return self.user.username
-

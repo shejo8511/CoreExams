@@ -10,6 +10,7 @@ from company.models import Company
 from .models import Patient, PatientExam, ExamSample
 from exam.models import TypeExam
 from datetime import date, datetime
+from django.db.models import Q
 
 # Consulta de Pacientes
 def consultPatient(id):
@@ -79,13 +80,21 @@ def calatorAge(birthday_str):
     age = hoy.year - birthday.year - ((hoy.month, hoy.day) < (birthday.month, birthday.day))
     return age
 
-#Listado de Pasientes
+#Listado de Pacientes
 @login_required
 def listPatientExam(request):
     company = Company.objects.filter(user_id=request.user.id).first()
+    search_term = request.GET.get('search_term')
     if company:
-        #listPatient = Patient.objects.filter(company_id=company.id)
-        listPatientExam = PatientExam.objects.filter(company=company.id).order_by('-date_creation')
+        if search_term:
+            print("----search_term: "+str(search_term))
+            #listPatientExam = PatientExam.objects.filter(identification=search_term | full_name=search_term).order_by('-date_exam')
+            listPatientExam = PatientExam.objects.filter(
+                Q(patient__identification__icontains=search_term) | Q(patient__full_name__icontains=search_term)
+            ).order_by('-date_exam')
+        else:
+            #listPatient = Patient.objects.filter(company_id=company.id)
+            listPatientExam = PatientExam.objects.filter(company=company.id).order_by('-date_creation')
         paginator = Paginator(listPatientExam, 10)  # Especifica el número de elementos por página
         page_number = request.GET.get('page')  # Obtiene el número de página actual de los parámetros de la URL
         page = paginator.get_page(page_number)  # Obtiene la página solicitada

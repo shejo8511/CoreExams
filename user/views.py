@@ -53,8 +53,6 @@ def dateNowEcuador():
 
     return adjusted_date_str
 
-####
-
 # Para Cerrar Sesion
 def singout (request):
     logout(request)
@@ -245,6 +243,7 @@ def register(request):
         print('e: '+ str(e))
         print("223")
         return render(request, 'register.html', {'message' : e,'user_form': user_form, 'company_form': company_form,'company':company_user,'memberships_list':memberships_list})
+
 
 @api_view(['POST'])
 def login_view(request):

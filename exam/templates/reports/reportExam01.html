@@ -4,7 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>INFORME ENDOSC&Oacute;PICO</title>
-    
+    <style>
+       @page {
+            background-image: url('{{ logo }}');
+            background-opacity: 0.2;
+            size: a4;
+            margin: 1cm;
+            margin-bottom: 2.5cm;
+            @frame footer_frame {           /* Another static Frame */
+                -pdf-frame-content: footer_content;
+                left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+            }
+       }
+     </style>
     <table style="width:100%" border="0.01" cellspacing="" cellpadding="5" >
         <tbody>
             <div style="text-align:right;font-size:12px">Fecha Examen: {{patientExam.date_exam}}</div>
@@ -48,35 +60,6 @@
             {% endfor %}
         </tbody>
     </table>
-
-    <!--<table>
-        <tbody>
-            <td>
-                {% for objeto in sample_exam %}
-                <tr>
-                    <img class="card-img-top" src="{{rutaImg}}{{objeto.name}}" alt="{{objeto.name}}" style="width: 250; height: 150;">
-                    
-                </tr> 
-                <td>
-                    <p>{{objeto.diagnostic}}" </p>
-                </td>       
-                {% endfor %}
-            </td>
-        </tbody>
-    </table>-->
-    <!--<div class="container">
-        <div class="row">
-            {% for sample in sample_exam %}
-            <div class="col-md-3">            
-                <div style="font-size:5px;text-align:center">
-                    Imagen </br><img src="{{rutaImg}}{{sample.name}}" alt="{{ sample.name }}" width="300" height="150">
-                    <p>{{sample.diagnostic}}</p></td>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>-->
-    
     <table style="width:100%" border="0.01" cellspacing="" cellpadding="5" >
         {% if patientExam.diagnostic_general %}
             <tr>
@@ -100,5 +83,9 @@
             </td>
         {% endif %}
     </table>
+    <!-- Content for Static Frame 'footer_frame' -->
+    <div id="footer_content">
+        <div><p style="text-align: right;font-weight: bold;">Direccion: {{ company.address }} - {{ company.city.name }} - {{ company.country.name }} - Telefono: {{ company.phone }}</p></div>
+    </div>
 </body>
 </html>

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  {% if message %}
+    <div id="alert-message" class="alert alert-warning" role="alert">
+        {{ message }}
+    </div>
+  {% endif %}
+  <div class="container">
+    <div class="row">
+        <div class="card mx-auto" style="width: 35rem;">
+            <div class="card-body ">
+            <div class="text-center"> <!-- Agregar una clase de centrado -->
+                <h4>Crear Pais</h4>
+            </div>
+            <form method="POST" enctype="multipart/form-data">
+                <div class="form-row">
+                    {% csrf_token %}
+                    <div class="form-group col-md-6">
+                        {{ country_form.name }}
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Crear</button>
+                <a href="{% url 'list_country' %}" class="btn btn-secondary">Regresar</a>
+            </form>
+          </div>
+        </div>
+    </div>
+  </div>
+{% endblock %}
